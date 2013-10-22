@@ -3,6 +3,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+//add the JDBC driver to your classpath, located in lib/mysql-connector
 public class JDBCSample {
     private Connection connection;
 
