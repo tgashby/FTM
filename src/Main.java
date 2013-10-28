@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Timer;
 
 /**
  * User: tgashby
@@ -8,22 +9,28 @@ import java.util.ArrayList;
 public class Main {
     public static void main(String[] args)
     {
-        ArrayList<StockBean> stocks = null;
+//        ArrayList<StockBean> stocks = null;
+//
+//        try {
+//           stocks = CSVParser.parse("data/OLIN.csv");
+//        }
+//        catch (Exception e)
+//        {
+//            System.out.println(e.getMessage());
+//        }
+//
+//        if (stocks != null)
+//        {
+//            for (StockBean stock : stocks)
+//            {
+//                System.out.println("Stock: " + stock.getDate() + " " + stock.getHigh());
+//            }
+//        }
+        Timer yfRunner = new Timer();
 
-        try {
-           stocks = CSVParser.parse("data/OLIN.csv");
-        }
-        catch (Exception e)
-        {
-            System.out.println(e.getMessage());
-        }
+        yfRunner.schedule(new YFQuerier(new String[]{"MSFT", "JNJ"}, "snd1l1"), 0, 5000);
 
-        if (stocks != null)
-        {
-            for (StockBean stock : stocks)
-            {
-                System.out.println("Stock: " + stock.getDate() + " " + stock.getHigh());
-            }
-        }
+        while (true)
+            ;
     }
 }
