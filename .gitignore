@@ -9,7 +9,7 @@ dist/
 nbdist/
 nbactions.xml
 nb-configuration.xml
-
+*.!sync
 
 ## generic files to ignore
 *~
