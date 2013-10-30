@@ -3,12 +3,14 @@ import java.sql.Date;
 
 public class StockValue {
    protected String id;
+   protected String name;
    protected Date date;
    protected Time time;
    protected double value;
 
-   StockValue(String i, Date d, Time t, double v) {
+   StockValue(String i, String n, Date d, Time t, double v) {
       id = i;
+      name = n;
       date = d;
       time = t;
       value = v;
@@ -28,6 +30,14 @@ public class StockValue {
 
    void setId(String i) {
       id = i;
+   }
+
+   String getName() {
+      return name;
+   }
+
+   void setName(String n) {
+      name = n;
    }
 
    Date getDate() {
