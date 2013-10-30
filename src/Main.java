@@ -28,7 +28,7 @@ public class Main {
 //        }
         Timer yfRunner = new Timer();
 
-        yfRunner.schedule(new YFQuerier(new String[]{"MSFT", "JNJ"}, "snd1l1t1"), 0, 5000);
+        yfRunner.schedule(new YFQuerier(new String[]{"MSFT", "JNJ"}, "snl1"), 0, 5000);
 
         while (true)
             ;

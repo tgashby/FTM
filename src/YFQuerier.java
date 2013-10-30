@@ -4,7 +4,11 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.sql.Time;
+import java.text.DateFormat;
+import java.text.ParseException;
 import java.util.Arrays;
+import java.sql.Date;
 import java.util.TimerTask;
 
 /**
@@ -71,9 +75,15 @@ public class YFQuerier extends TimerTask {
 
             BufferedReader in = new BufferedReader(new InputStreamReader(yc.getInputStream()));
 
-            String inputLine;
-            while ((inputLine = in.readLine()) != null)
-                System.out.println(inputLine);
+            String inputLine = in.readLine();
+
+            String[] stockParts = inputLine.split(",");
+
+            for (int i = 0; i < stockParts.length; i++)
+                stockParts[i] = stockParts[i].replaceAll("\"", "");
+
+            StockValue stock = new StockValue(stockParts[0], stockParts[1], new Date(new java.util.Date().getTime()),
+             new Time(System.currentTimeMillis()), new Double(stockParts[2]));
 
             in.close();
         }
