@@ -2,14 +2,14 @@ import java.sql.Time;
 import java.sql.Date;
 
 public class StockValue {
-   protected String id;
+   protected String symbol;
    protected String name;
    protected Date date;
    protected Time time;
    protected double value;
 
-   StockValue(String i, String n, Date d, Time t, double v) {
-      id = i;
+   StockValue(String s, String n, Date d, Time t, double v) {
+      symbol = s;
       name = n;
       date = d;
       time = t;
@@ -25,11 +25,11 @@ public class StockValue {
    }
 
    String getId() {
-      return id;
+      return symbol;
    }
 
-   void setId(String i) {
-      id = i;
+   void setId(String s) {
+      symbol = s;
    }
 
    String getName() {
