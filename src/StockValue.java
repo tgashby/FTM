@@ -1,3 +1,9 @@
+/**
+ * This is our basic stock value class.
+ *
+ * FYI tag is a horrible horrible person
+ */
+
 import java.sql.Time;
 import java.sql.Date;
 
@@ -24,11 +30,11 @@ public class StockValue {
       value = v;
    }
 
-   String getId() {
+   String getSymbol() {
       return symbol;
    }
 
-   void setId(String s) {
+   void setSymbol(String s) {
       symbol = s;
    }
 
