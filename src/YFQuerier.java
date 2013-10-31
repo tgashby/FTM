@@ -65,11 +65,7 @@ public class YFQuerier extends TimerTask {
         urlOptions += "&f=" + options;
 
         dbCon = new DatabaseConnection();
-        try {
-            dbCon.connect();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        dbCon.connect();
     }
 
     @Override
@@ -91,11 +87,7 @@ public class YFQuerier extends TimerTask {
             StockValue stock = new StockValue(stockParts[0], stockParts[1], new Date(new java.util.Date().getTime()),
              new Time(System.currentTimeMillis()), new Double(stockParts[2]));
 
-            try {
-                dbCon.setStock(stock);
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            dbCon.insertStock(stock);
 
             in.close();
         }
@@ -111,10 +103,6 @@ public class YFQuerier extends TimerTask {
 
     public void disconnect()
     {
-        try {
-            dbCon.disconnect();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        dbCon.disconnect();
     }
 }

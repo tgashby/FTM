@@ -8,16 +8,16 @@ public class DatabaseConnection implements StockColumnNames {
     private Connection connection;
 
     private String jdbcURL;
-    private StringBuilder jdbcURLBuilder = new StringBuilder(100);
-    private final String hostname = "ftmdb.cbeadsxspecl.us-west-2.rds.amazonaws.com";
-    private final String port = "3306";
-    private final String databaseName = "Stocks";
-    private final String username = "ftm";
-    private final String password = "ftm-pass";
-
     private final String stockTableName = "stocks";
 
     public DatabaseConnection() {
+        StringBuilder jdbcURLBuilder = new StringBuilder(100);
+        String hostname = "ftmdb.cbeadsxspecl.us-west-2.rds.amazonaws.com";
+        String port = "3306";
+        String databaseName = "Stocks";
+        String username = "ftm";
+        String password = "ftm-pass";
+
         jdbcURLBuilder.append("jdbc:mysql://");
         jdbcURLBuilder.append(hostname);
         jdbcURLBuilder.append(':');
@@ -28,31 +28,44 @@ public class DatabaseConnection implements StockColumnNames {
         jdbcURLBuilder.append(username);
         jdbcURLBuilder.append("&password=");
         jdbcURLBuilder.append(password);
+
         jdbcURL = jdbcURLBuilder.toString();
     }
 
-    public void connect() throws SQLException {
-        connection = DriverManager.getConnection(jdbcURL);
+    public void connect() {
+        try {
+            connection = DriverManager.getConnection(jdbcURL);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
-    public StockValue getStock(String name, Date date, Time time) throws SQLException {
+    public StockValue getStock(String name, Date date, Time time) {
         StockValue stockValue = null;
-        Statement statement = connection.createStatement();
-        ResultSet resultSet = statement.executeQuery("select * from " + stockTableName +
-                " where " + NAME + "=" + name + " and " +
-                            DAY + "=" + date + " and " +
-                            TIME + "=" + time);
 
-        if (resultSet.next()) {
-            stockValue = new StockValue(resultSet.getString(SYMBOL), resultSet.getString(NAME), resultSet.getDate(DAY),
-                    resultSet.getTime(TIME), resultSet.getDouble(VALUE));
+        try
+        {
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery("select * from " + stockTableName +
+                    " where " + NAME + "=" + name + " and " +
+                                DAY + "=" + date + " and " +
+                                TIME + "=" + time);
+
+            if (resultSet.next()) {
+                stockValue = new StockValue(resultSet.getString(SYMBOL), resultSet.getString(NAME), resultSet.getDate(DAY),
+                        resultSet.getTime(TIME), resultSet.getDouble(VALUE));
+            }
+            statement.close();
         }
-        statement.close();
+        catch (SQLException ex)
+        {
+            ex.printStackTrace();
+        }
 
         return stockValue;
     }
 
-    public StockValue[] getStockPrices(String[] names, Date dates[], Time times[]) throws SQLException {
+    public StockValue[] getStockPrices(String[] names, Date dates[], Time times[]) {
         StockValue[] stockBeans = new StockValue[names.length];
 
         for (int i = 0; i < names.length; i++) {
@@ -62,17 +75,26 @@ public class DatabaseConnection implements StockColumnNames {
         return stockBeans;
     }
 
-    public void setStock(StockValue stockValue) throws SQLException {
-        Statement statement = connection.createStatement();
-        statement.execute("insert into " + stockTableName + " values ( " +
-                "'" + stockValue.getSymbol() + "'," +
-                "'" + stockValue.getName() + "'," +
-                "'" + stockValue.getDate() + "'," +
-                "'" + stockValue.getTime() + "'," +
-                "'" + stockValue.getValue() + "');");
+    public void insertStock(StockValue stockValue) {
+        try {
+            Statement statement = connection.createStatement();
+            statement.execute("insert into " + stockTableName + " values ( " +
+                    "'" + stockValue.getSymbol() + "'," +
+                    "'" + stockValue.getName() + "'," +
+                    "'" + stockValue.getDate() + "'," +
+                    "'" + stockValue.getTime() + "'," +
+                    stockValue.getValue() + ");");
+        }
+        catch (SQLException ex) {
+            ex.printStackTrace();
+        }
     }
 
-    public void disconnect() throws SQLException {
-        connection.close();
+    public void disconnect() {
+        try {
+            connection.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }
