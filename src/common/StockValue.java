@@ -1,4 +1,4 @@
-/**
+package common; /**
  * This is our basic stock value class.
  *
  * FYI tag is a horrible horrible person
@@ -14,7 +14,7 @@ public class StockValue {
    protected Time time;
    protected double value;
 
-   StockValue(String s, String n, Date d, Time t, double v) {
+   public StockValue(String s, String n, Date d, Time t, double v) {
       symbol = s;
       name = n;
       date = d;
