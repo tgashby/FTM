@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Scanner;
 import java.util.Timer;
 
 /**
@@ -26,11 +27,15 @@ public class Main {
 //                System.out.println("Stock: " + stock.getDate() + " " + stock.getHigh());
 //            }
 //        }
-        Timer yfRunner = new Timer();
+//        Timer yfRunner = new Timer();
+        YFQuerier yfQuerier = new YFQuerier(new String[]{"MSFT", "JNJ"}, "snl1");
 
-        yfRunner.schedule(new YFQuerier(new String[]{"MSFT", "JNJ"}, "snl1"), 0, 5000);
+        yfQuerier.run();
 
-        while (true)
-            ;
+//        yfRunner.schedule(yfQuerier, 0, 5000);
+//
+//        Scanner input = new Scanner(System.in);
+
+        yfQuerier.disconnect();
     }
 }

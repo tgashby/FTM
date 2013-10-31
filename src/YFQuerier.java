@@ -4,6 +4,7 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Date;
 import java.util.TimerTask;
@@ -49,6 +50,7 @@ import java.util.TimerTask;
  */
 public class YFQuerier extends TimerTask {
     private String urlOptions;
+    private DatabaseConnection dbCon;
 
     public YFQuerier(String[] stocks, String options)
     {
@@ -61,6 +63,13 @@ public class YFQuerier extends TimerTask {
         urlOptions = urlOptions.substring(0, urlOptions.length() - 1);
 
         urlOptions += "&f=" + options;
+
+        dbCon = new DatabaseConnection();
+        try {
+            dbCon.connect();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -82,6 +91,12 @@ public class YFQuerier extends TimerTask {
             StockValue stock = new StockValue(stockParts[0], stockParts[1], new Date(new java.util.Date().getTime()),
              new Time(System.currentTimeMillis()), new Double(stockParts[2]));
 
+            try {
+                dbCon.setStock(stock);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+
             in.close();
         }
         catch (MalformedURLException urlException)
@@ -91,6 +106,15 @@ public class YFQuerier extends TimerTask {
         catch (IOException ioException)
         {
             ioException.printStackTrace();
+        }
+    }
+
+    public void disconnect()
+    {
+        try {
+            dbCon.disconnect();
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 }
