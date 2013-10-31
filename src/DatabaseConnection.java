@@ -11,9 +11,11 @@ public class DatabaseConnection implements StockColumnNames {
     private StringBuilder jdbcURLBuilder = new StringBuilder(100);
     private final String hostname = "ftmdb.cbeadsxspecl.us-west-2.rds.amazonaws.com";
     private final String port = "3306";
-    private final String tableName = "Stocks";
+    private final String databaseName = "Stocks";
     private final String username = "ftm";
     private final String password = "ftm-pass";
+
+    private final String stockTableName = "stocks";
 
     public DatabaseConnection() {
         jdbcURLBuilder.append("jdbc:mysql://");
@@ -21,7 +23,7 @@ public class DatabaseConnection implements StockColumnNames {
         jdbcURLBuilder.append(':');
         jdbcURLBuilder.append(port);
         jdbcURLBuilder.append('/');
-        jdbcURLBuilder.append(tableName);
+        jdbcURLBuilder.append(databaseName);
         jdbcURLBuilder.append("?user=");
         jdbcURLBuilder.append(username);
         jdbcURLBuilder.append("&password=");
@@ -36,7 +38,7 @@ public class DatabaseConnection implements StockColumnNames {
     public StockValue getStock(String name, Date date, Time time) throws SQLException {
         StockValue stockValue = null;
         Statement statement = connection.createStatement();
-        ResultSet resultSet = statement.executeQuery("select * from " + tableName +
+        ResultSet resultSet = statement.executeQuery("select * from " + stockTableName +
                 " where " + NAME + "=" + name + " and " +
                             DAY + "=" + date + " and " +
                             TIME + "=" + time);
@@ -62,7 +64,7 @@ public class DatabaseConnection implements StockColumnNames {
 
     public void setStock(StockValue stockValue) throws SQLException {
         Statement statement = connection.createStatement();
-        statement.execute("insert into " + tableName + " values ( " +
+        statement.execute("insert into " + stockTableName + " values ( " +
                 "'" + stockValue.getSymbol() + "'," +
                 "'" + stockValue.getName() + "'," +
                 "'" + stockValue.getDate() + "'," +
