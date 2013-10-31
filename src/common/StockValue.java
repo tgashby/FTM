@@ -22,7 +22,7 @@ public class StockValue {
       value = v;
    }
 
-   double getValue() {
+   public double getValue() {
       return value;
    }
 
@@ -30,7 +30,7 @@ public class StockValue {
       value = v;
    }
 
-   String getSymbol() {
+   public String getSymbol() {
       return symbol;
    }
 
@@ -38,7 +38,7 @@ public class StockValue {
       symbol = s;
    }
 
-   String getName() {
+   public String getName() {
       return name;
    }
 
@@ -46,7 +46,7 @@ public class StockValue {
       name = n;
    }
 
-   Date getDate() {
+   public Date getDate() {
       return date;
    }
 
@@ -54,7 +54,7 @@ public class StockValue {
       date = d;
    }
 
-   Time getTime() {
+   public Time getTime() {
       return time;
    }
 

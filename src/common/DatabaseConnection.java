@@ -1,6 +1,7 @@
 package common;
 
 import java.sql.*;
+import java.util.ArrayList;
 
 /**
  * Created by allen on 10/30/13
@@ -77,6 +78,31 @@ public class DatabaseConnection {
         }
 
         return stockBeans;
+    }
+
+    public ArrayList<StockValue> getAllStocks() {
+        ArrayList<StockValue> allStocks = new ArrayList<StockValue>(10000);
+
+        try {
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery("select * from " + stockTableName);
+
+            while(resultSet.next()) {
+                allStocks.add(new StockValue(resultSet.getString(StockColumnNames.SYMBOL.toString()),
+                        resultSet.getString(StockColumnNames.NAME.toString()),
+                        resultSet.getDate(StockColumnNames.DAY.toString()),
+                        resultSet.getTime(StockColumnNames.TIME.toString()),
+                        resultSet.getDouble(StockColumnNames.VALUE.toString())));
+            }
+
+            statement.close();
+        }
+        catch (SQLException ex)
+        {
+            ex.printStackTrace();
+        }
+
+        return allStocks;
     }
 
     public void insertStock(StockValue stockValue) {
