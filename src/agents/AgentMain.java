@@ -27,6 +27,7 @@ public class AgentMain {
                 if (wallet > curValue) {
                     wallet -= curValue;
                     numShares++;
+                    System.out.println("buying a share at $" + curValue);
                 }
             }
             else if (lastValue < curValue) {
@@ -34,10 +35,17 @@ public class AgentMain {
                 if (numShares > 0) {
                     numShares--;
                     wallet += curValue;
+                    System.out.println("selling a share at $" + curValue);
                 }
             }
         }
 
-        System.out.printf("Final wallet is %.2f", wallet);
+        System.out.println();
+        System.out.printf("Final wallet is $%.2f\n", wallet);
+        System.out.println("Portfolio has " + numShares + " shares.");
+        System.out.println("Portfolio is worth $" + numShares * curValue);
+        System.out.println();
+        double netWorth = wallet + numShares * curValue;
+        System.out.printf("Net worth is $%.2f\n", netWorth);
     }
 }
