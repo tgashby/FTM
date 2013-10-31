@@ -44,7 +44,7 @@ public class DatabaseConnection implements StockColumnNames {
                             TIME + "=" + time);
 
         if (resultSet.next()) {
-            stockValue = new StockValue(resultSet.getString(SYBMOL), resultSet.getString(NAME), resultSet.getDate(DAY),
+            stockValue = new StockValue(resultSet.getString(SYMBOL), resultSet.getString(NAME), resultSet.getDate(DAY),
                     resultSet.getTime(TIME), resultSet.getDouble(VALUE));
         }
         statement.close();

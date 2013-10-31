@@ -14,7 +14,7 @@ public class JDBCExecutorUtilityDriver {
                     "name VARCHAR(255) not null," +
                     "day DATE not null," +
                     "time TIME not null," +
-                    "value DECIMAL not null)");
+                    "value DECIMAL(10,2) not null)");
         } catch (SQLException e) {
             e.printStackTrace();
         }
