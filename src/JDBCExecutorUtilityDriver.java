@@ -3,10 +3,10 @@ import java.sql.SQLException;
 /**
  * Created by allen on 10/22/13
  */
-public class JDBCSampleDriver {
+public class JDBCExecutorUtilityDriver {
 
     public static void main(String[] args) {
-        JDBCSample jdbcSample = new JDBCSample();
+        JDBCExecutorUtility jdbcSample = new JDBCExecutorUtility();
         try {
             jdbcSample.connect();
             jdbcSample.executeSQLStatement("create table stocks ( " +
