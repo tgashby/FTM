@@ -9,8 +9,12 @@ public class JDBCSampleDriver {
         JDBCSample jdbcSample = new JDBCSample();
         try {
             jdbcSample.connect();
-            //crashes since query cannot be empty
-            jdbcSample.executeSQLStatement("");
+            jdbcSample.executeSQLStatement("create table stocks ( " +
+                    "symbol VARCHAR(255) not null," +
+                    "name VARCHAR(255) not null," +
+                    "day DATE not null," +
+                    "time TIME not null," +
+                    "value DECIMAL not null)");
         } catch (SQLException e) {
             e.printStackTrace();
         }

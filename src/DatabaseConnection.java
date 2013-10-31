@@ -1,0 +1,76 @@
+
+import java.sql.*;
+
+/**
+ * Created by allen on 10/30/13
+ */
+public class DatabaseConnection implements StockColumnNames {
+    private Connection connection;
+
+    private String jdbcURL;
+    private StringBuilder jdbcURLBuilder = new StringBuilder(100);
+    private String hostname = "ftmdb.cbeadsxspecl.us-west-2.rds.amazonaws.com";
+    private String port = "3306";
+    private String tableName = "stocks";
+    private String username = "ftm";
+    private String password = "ftm-pass";
+
+    public DatabaseConnection() {
+        //String jdbcUrl = "jdbc:mysql://" + hostname + ":" + port + "/" + dbName + "?user=" + userName + "&password=" + password;
+        jdbcURLBuilder.append("jdbc:mysql://");
+        jdbcURLBuilder.append(hostname);
+        jdbcURLBuilder.append(':');
+        jdbcURLBuilder.append(port);
+        jdbcURLBuilder.append('/');
+        jdbcURLBuilder.append(tableName);
+        jdbcURLBuilder.append("?user=");
+        jdbcURLBuilder.append(username);
+        jdbcURLBuilder.append("&password=");
+        jdbcURLBuilder.append(password);
+        jdbcURL = jdbcURLBuilder.toString();
+    }
+
+    public void connect() throws SQLException {
+        connection = DriverManager.getConnection(jdbcURL);
+    }
+
+    public StockValue getStock(String name, Date date, Time time) throws SQLException {
+        StockValue stockValue = null;
+        Statement statement = connection.createStatement();
+        ResultSet resultSet = statement.executeQuery("select * from " + tableName +
+                " where " + NAME +"=" + name + " and " + DAY + "=" + date + "and" + TIME + "=" + time);
+
+        if (resultSet.next()) {
+            stockValue = new StockValue(resultSet.getString(SYBMOL), resultSet.getString(NAME), resultSet.getDate(DAY),
+                    resultSet.getTime(TIME), resultSet.getDouble(VALUE));
+        }
+
+        statement.close();
+
+        return stockValue;
+    }
+
+    public void setStock(StockValue stockValue) throws SQLException {
+        Statement statement = connection.createStatement();
+        statement.execute("insert into " + tableName + "values ( " +
+                stockValue.getSymbol() + "," +
+                stockValue.getName() + "," +
+                stockValue.getDate() + "," +
+                stockValue.getTime() + "," +
+                stockValue.getValue() + ");");
+    }
+
+    public void disconnect() throws SQLException {
+        connection.close();
+    }
+
+    /*public StockBean[] getStockPrices(String[] names, Date dates[], Time times[]) throws SQLException {
+        StockBean[] stockBeans = new StockBean[names.length];
+
+        for (int i = 0; i < names.length; i++) {
+            stockBeans[i] = getStock(names[i], dates[i], times[i]);
+        }
+
+        return stockBeans;
+    }     */
+}
