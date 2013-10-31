@@ -4,7 +4,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 //add the JDBC driver to your classpath, located in lib/mysql-connector
-public class JDBCSample {
+public class JDBCExecutorUtility {
     private Connection connection;
 
     private String jdbcURL;
@@ -15,7 +15,7 @@ public class JDBCSample {
     private String username = "ftm";
     private String password = "ftm-pass";
 
-    public JDBCSample() {
+    public JDBCExecutorUtility() {
         //String jdbcUrl = "jdbc:mysql://" + hostname + ":" + port + "/" + dbName + "?user=" + userName + "&password=" + password;
         jdbcURLBuilder.append("jdbc:mysql://");
         jdbcURLBuilder.append(hostname);
