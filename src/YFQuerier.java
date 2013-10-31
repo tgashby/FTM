@@ -5,9 +5,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.sql.Time;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.util.Arrays;
 import java.sql.Date;
 import java.util.TimerTask;
 
