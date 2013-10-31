@@ -5,7 +5,7 @@ import java.sql.*;
 /**
  * Created by allen on 10/30/13
  */
-public class DatabaseConnection implements StockColumnNames {
+public class DatabaseConnection {
     private Connection connection;
 
     private String jdbcURL;
@@ -48,13 +48,16 @@ public class DatabaseConnection implements StockColumnNames {
         {
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery("select * from " + stockTableName +
-                    " where " + NAME + "=" + name + " and " +
-                                DAY + "=" + date + " and " +
-                                TIME + "=" + time);
+                    " where " + StockColumnNames.NAME + "=" + name + " and " +
+                                StockColumnNames.DAY + "=" + date + " and " +
+                                StockColumnNames.TIME + "=" + time);
 
             if (resultSet.next()) {
-                stockValue = new StockValue(resultSet.getString(SYMBOL), resultSet.getString(NAME), resultSet.getDate(DAY),
-                        resultSet.getTime(TIME), resultSet.getDouble(VALUE));
+                stockValue = new StockValue(resultSet.getString(StockColumnNames.SYMBOL.toString()),
+                        resultSet.getString(StockColumnNames.NAME.toString()),
+                        resultSet.getDate(StockColumnNames.DAY.toString()),
+                        resultSet.getTime(StockColumnNames.TIME.toString()),
+                        resultSet.getDouble(StockColumnNames.VALUE.toString()));
             }
             statement.close();
         }
