@@ -63,11 +63,11 @@ public class DatabaseConnection implements StockColumnNames {
     public void setStock(StockValue stockValue) throws SQLException {
         Statement statement = connection.createStatement();
         statement.execute("insert into " + tableName + " values ( " +
-                stockValue.getSymbol() + "," +
-                stockValue.getName() + "," +
-                stockValue.getDate() + "," +
-                stockValue.getTime() + "," +
-                stockValue.getValue() + ");");
+                "'" + stockValue.getSymbol() + "'," +
+                "'" + stockValue.getName() + "'," +
+                "'" + stockValue.getDate() + "'," +
+                "'" + stockValue.getTime() + "'," +
+                "'" + stockValue.getValue() + "');");
     }
 
     public void disconnect() throws SQLException {
