@@ -18,7 +18,6 @@ public class AgentMain {
         int numShares = 0;
 
         while ((stock = market.getNextValue()) != null && wallet > 0) {
-            //System.out.println(stock.getValue());
             lastValue = curValue;
             curValue = stock.getValue();
 
