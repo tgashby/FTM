@@ -10,8 +10,19 @@ import java.util.Timer;
 public class YFMain {
     public static void main(String[] args)
     {
+        String[] stocksToQuery;
+
+        if (args.length > 0)
+        {
+            stocksToQuery = args;
+        }
+        else
+        {
+            stocksToQuery = new String[] {"MSFT", "GOOG", "OLN", "WMT"};
+        }
+
         Timer yfRunner = new Timer();
-        YFQuerier yfQuerier = new YFQuerier(new String[]{"MSFT"}, "snl1");
+        YFQuerier yfQuerier = new YFQuerier(stocksToQuery, "snl1");
 
         yfRunner.schedule(yfQuerier, 0, 5000);
 
