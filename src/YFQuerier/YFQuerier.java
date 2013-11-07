@@ -81,17 +81,19 @@ public class YFQuerier extends TimerTask {
 
             BufferedReader in = new BufferedReader(new InputStreamReader(yc.getInputStream()));
 
-            String inputLine = in.readLine();
+            String inputLine;
+            while ((inputLine = in.readLine()) != null)
+            {
+                String[] stockParts = inputLine.split(",");
 
-            String[] stockParts = inputLine.split(",");
+                for (int i = 0; i < stockParts.length; i++)
+                    stockParts[i] = stockParts[i].replaceAll("\"", "");
 
-            for (int i = 0; i < stockParts.length; i++)
-                stockParts[i] = stockParts[i].replaceAll("\"", "");
+                StockValue stock = new StockValue(stockParts[0], stockParts[1], new Date(new java.util.Date().getTime()),
+                        new Time(System.currentTimeMillis()), new Double(stockParts[2]));
 
-            StockValue stock = new StockValue(stockParts[0], stockParts[1], new Date(new java.util.Date().getTime()),
-             new Time(System.currentTimeMillis()), new Double(stockParts[2]));
-
-            dbCon.insertStock(stock);
+                dbCon.insertStock(stock);
+            }
 
             in.close();
         }
