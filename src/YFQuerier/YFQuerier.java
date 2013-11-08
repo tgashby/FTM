@@ -11,6 +11,8 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.sql.Date;
 import java.sql.Time;
+import java.util.Calendar;
+import java.util.TimeZone;
 import java.util.TimerTask;
 
 /**
@@ -74,36 +76,49 @@ public class YFQuerier extends TimerTask {
 
     @Override
     public void run() {
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeZone(TimeZone.getTimeZone("EST"));
 
-        try {
-            URL yahooFinance = new URL("http://finance.yahoo.com/d/quotes.csv?s=" + urlOptions);
-            URLConnection yc = yahooFinance.openConnection();
+        Calendar exchangeOpen = Calendar.getInstance();
+        exchangeOpen.setTimeZone(TimeZone.getTimeZone("EST"));
+        exchangeOpen.set(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_WEEK), 9, 30);
 
-            BufferedReader in = new BufferedReader(new InputStreamReader(yc.getInputStream()));
+        Calendar exchangeClose = Calendar.getInstance();
+        exchangeClose.setTimeZone(TimeZone.getTimeZone("EST"));
+        exchangeClose.set(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_WEEK), 4, 0);
 
-            String inputLine;
-            while ((inputLine = in.readLine()) != null)
-            {
-                String[] stockParts = inputLine.split(",");
+//        if (cal.after(exchangeOpen) && cal.before(exchangeClose))
+        {
+            try {
+                URL yahooFinance = new URL("http://finance.yahoo.com/d/quotes.csv?s=" + urlOptions);
+                URLConnection yc = yahooFinance.openConnection();
 
-                for (int i = 0; i < stockParts.length; i++)
-                    stockParts[i] = stockParts[i].replaceAll("\"", "");
+                BufferedReader in = new BufferedReader(new InputStreamReader(yc.getInputStream()));
 
-                StockValue stock = new StockValue(stockParts[0], stockParts[1], new Date(new java.util.Date().getTime()),
-                        new Time(System.currentTimeMillis()), new Double(stockParts[2]));
+                String inputLine;
+                while ((inputLine = in.readLine()) != null)
+                {
+                    String[] stockParts = inputLine.split(",");
 
-                dbCon.insertStock(stock);
+                    for (int i = 0; i < stockParts.length; i++)
+                        stockParts[i] = stockParts[i].replaceAll("\"", "");
+
+                    StockValue stock = new StockValue(stockParts[0], stockParts[1], new Date(new java.util.Date().getTime()),
+                            new Time(System.currentTimeMillis()), new Double(stockParts[2]));
+
+                    dbCon.insertStock(stock);
+                }
+
+                in.close();
             }
-
-            in.close();
-        }
-        catch (MalformedURLException urlException)
-        {
-            urlException.printStackTrace();
-        }
-        catch (IOException ioException)
-        {
-            ioException.printStackTrace();
+            catch (MalformedURLException urlException)
+            {
+                urlException.printStackTrace();
+            }
+            catch (IOException ioException)
+            {
+                ioException.printStackTrace();
+            }
         }
     }
 

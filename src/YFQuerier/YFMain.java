@@ -1,6 +1,7 @@
 package YFQuerier;
 
 import java.util.Timer;
+import java.util.concurrent.TimeUnit;
 
 /**
  * User: tgashby
@@ -18,7 +19,7 @@ public class YFMain {
         }
         else
         {
-            stocksToQuery = new String[] {"MSFT", "GOOG", "OLN", "KR"};
+            stocksToQuery = new String[] {"MSFT", "GOOG", "OLN", "KR", "TWTR", "TDC", "MSI", "VZ", "BA", "BKW"};
         }
 
         Timer yfRunner = new Timer();
@@ -27,7 +28,13 @@ public class YFMain {
         yfRunner.schedule(yfQuerier, 0, 5000);
 
         while(true)
-            ;
+        {
+            try {
+                TimeUnit.SECONDS.sleep(5);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
 
 //        yfQuerier.disconnect();
     }
