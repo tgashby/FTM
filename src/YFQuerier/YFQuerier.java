@@ -80,14 +80,18 @@ public class YFQuerier extends TimerTask {
         cal.setTimeZone(TimeZone.getTimeZone("EST"));
 
         Calendar exchangeOpen = Calendar.getInstance();
+        exchangeOpen.clear();
         exchangeOpen.setTimeZone(TimeZone.getTimeZone("EST"));
-        exchangeOpen.set(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_WEEK), 9, 30);
+        exchangeOpen.set(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH), 9, 30);
 
         Calendar exchangeClose = Calendar.getInstance();
+        exchangeClose.clear();
         exchangeClose.setTimeZone(TimeZone.getTimeZone("EST"));
-        exchangeClose.set(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_WEEK), 4, 0);
+        exchangeClose.set(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH), 16, 0);
 
-        if (cal.after(exchangeOpen) && cal.before(exchangeClose))
+        if (cal.after(exchangeOpen) && cal.before(exchangeClose) &&
+                cal.get(Calendar.DAY_OF_WEEK_IN_MONTH) != Calendar.SATURDAY &&
+                cal.get(Calendar.DAY_OF_WEEK_IN_MONTH) != Calendar.SUNDAY)
         {
             try {
                 URL yahooFinance = new URL("http://finance.yahoo.com/d/quotes.csv?s=" + urlOptions);
