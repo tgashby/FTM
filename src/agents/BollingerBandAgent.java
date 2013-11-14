@@ -2,9 +2,8 @@ package agents;
 
 import common.Market;
 import common.StockValue;
-import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
-import java.util.Queue;
+import java.util.Iterator;
 import java.util.concurrent.ArrayBlockingQueue;
 
 /**
@@ -13,52 +12,95 @@ import java.util.concurrent.ArrayBlockingQueue;
  * Time: 9:45 PM
  */
 public class BollingerBandAgent {
-    Market market = new Market();
-    StockValue stock;
-    double wallet;
-    int numShares = 0;
-    double curValue;
+    private Market market = new Market();
+    private StockValue stock;
+    private double wallet;
+    private int numShares = 0;
+    private double curValue;
 
-    private int movingAverageSampleSize;
-    private int bandWidthInStandardDeviations;
-    Queue<StockValue> stockValueQueue = new ArrayBlockingQueue<StockValue>(movingAverageSampleSize);
+    private int movingAverageSampleSize = 20;
+    private int bandWidth = 2;
+    private ArrayBlockingQueue<StockValue> stockValueQueue = new ArrayBlockingQueue<StockValue>(movingAverageSampleSize);
 
-    public BollingerBandAgent() {
-        movingAverageSampleSize = 20;
-        bandWidthInStandardDeviations = 2;
-    }
+    public BollingerBandAgent() {}
 
-    public BollingerBandAgent(int movingAverageSampleSize, int bandWidthInStandardDeviations) {
+    public BollingerBandAgent(int movingAverageSampleSize, int bandWidth) {
         this.movingAverageSampleSize = movingAverageSampleSize;
-        this.bandWidthInStandardDeviations = bandWidthInStandardDeviations;
+        this.bandWidth = bandWidth;
     }
 
     public void startTrading(int walletInUSDollars) {
-        DescriptiveStatistics descriptiveStatistics = new DescriptiveStatistics();
+
 
         while ((stock = market.getNextValue()) != null && wallet > 0) {
             //initialize q with 1st movingAverageSampleSize stocks. Temporary until market method is created to do this.
             if (stockValueQueue.size() < movingAverageSampleSize) {
                 stockValueQueue.add(stock);
-                descriptiveStatistics.addValue(stock.getValue());
             }
             else if (stockValueQueue.size() == movingAverageSampleSize) {
-                //do normal trade
-
-                //do value swap
+                doTrade(stock);
+                refreshQ(stock);
+                doTrade(stock);
             }
             else {
-                //remove old value from q
-                //remove old value from stats
-
-                //add new value to q
-                //add new value to stats
-
-                //calculate mean and standard deviation
-                double mean = descriptiveStatistics.getMean();
-                double standardDeviation = descriptiveStatistics.getStandardDeviation();
+                refreshQ(stock);
+                doTrade(stock);
             }
         }
+    }
+
+    private void doTrade(StockValue stockValue) {
+        double mean = getMean();
+        double standardDeviation = getStandardDeviation();
+        double lowerBound = mean - standardDeviation * bandWidth;
+        double upperBound = mean + standardDeviation * bandWidth;
+
+        //undervalued
+        if (stockValue.getValue() < lowerBound) {
+            //buy
+            if (wallet - stockValue.getValue() > 0) {
+                wallet -= stockValue.getValue();
+                numShares++;
+            }
+        }
+        //overvalued
+        else if (stockValue.getValue() > upperBound) {
+            //sell
+            if (numShares > 0) {
+                numShares--;
+                wallet += stockValue.getValue();
+            }
+        }
+    }
+
+    private void refreshQ(StockValue newValue) {
+        stockValueQueue.remove();
+        stockValueQueue.add(newValue);
+    }
+
+    //TODO: extend apache class to allow removing oldest value
+    private double getMean() {
+        Iterator<StockValue> iterator = stockValueQueue.iterator();
+        int sum = 0;
+
+        while (iterator.hasNext()) {
+            sum += iterator.next().getValue();
+        }
+
+        return sum / stockValueQueue.size();
+    }
+
+    private double getStandardDeviation() {
+        Iterator<StockValue> iterator = stockValueQueue.iterator();
+        double mean = getMean();
+        double temp = 0;
+
+        while (iterator.hasNext()) {
+            double next = iterator.next().getValue();
+            temp += (mean - next) * (mean - next);
+        }
+
+        return Math.sqrt(temp / stockValueQueue.size());
     }
 
     public double getFinalWallet() {
