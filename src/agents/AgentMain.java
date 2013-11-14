@@ -3,6 +3,9 @@ package agents;
 import common.Market;
 import common.StockValue;
 
+import java.util.Queue;
+import java.util.concurrent.ArrayBlockingQueue;
+
 /**
  * User: Tag
  * Date: 10/31/13
