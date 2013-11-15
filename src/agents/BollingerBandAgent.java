@@ -49,7 +49,7 @@ public class BollingerBandAgent {
     public void startTrading() {
         while (market.hasNextValue() && wallet >= 0) {
             stock = market.getNextValue();
-            //hack to only trade 1 stock
+            //only trade the stocks specified
             if (!stockSymbolsToTrade.contains(stock.getSymbol()))
                 continue;
             //set last values
