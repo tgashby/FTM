@@ -65,7 +65,7 @@ public class DatabaseConnection {
     }
 
     public ArrayList<Stock> getAllStocks() throws SQLException {
-        ArrayList<Stock> allStocks = new ArrayList<Stock>(10000);
+        ArrayList<Stock> allStocks = new ArrayList<Stock>(50000);
 
         Statement statement = connection.createStatement();
         ResultSet resultSet = statement.executeQuery("select * from " + stockTableName);
@@ -84,11 +84,11 @@ public class DatabaseConnection {
     }
 
     public ArrayList<Stock> getStocksByDay(Date date) throws SQLException {
-        ArrayList<Stock> allStocksToday = new ArrayList<Stock>(10000);
+        ArrayList<Stock> allStocksToday = new ArrayList<Stock>(50000);
 
         Statement statement = connection.createStatement();
         ResultSet resultSet = statement.executeQuery("select * from " + stockTableName +
-                " where " + StockTableColumnNames.DAY + "=" + date);
+                " where " + StockTableColumnNames.DAY + "=" + " date('" + date + "')");
 
         if (resultSet.next()) {
             allStocksToday.add(new Stock(resultSet.getString(StockTableColumnNames.SYMBOL.toString()),

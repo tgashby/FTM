@@ -16,7 +16,7 @@ public class AgentMain {
         valuesToTrade.add("TDC");
 
         //20 and 2 are default values
-        BollingerBandAgent bollingerBandAgent = new BollingerBandAgent(valuesToTrade, 500, 20, 1);
+        BollingerBandAgent bollingerBandAgent = new BollingerBandAgent(valuesToTrade, 50000, 40, 2);
 
         bollingerBandAgent.startTrading();
         System.out.printf("Final wallet is $%.2f\n", bollingerBandAgent.getFinalWallet());

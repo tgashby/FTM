@@ -1,6 +1,5 @@
 package common;
 
-import java.sql.Date;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
@@ -12,13 +11,14 @@ import java.util.ArrayList;
 public class Market {
     private ArrayList<Stock> stocks;
     private int stockNdx;
+    private final int millisecondsInADay = 86400000;
 
     public Market() {
         DatabaseConnection databaseConnection = new DatabaseConnection();
 
         databaseConnection.connect();
         try {
-            stocks = databaseConnection.getStocksByDay(new Date(System.currentTimeMillis()));
+            stocks = databaseConnection.getStocksByDay(new java.sql.Date(System.currentTimeMillis() - millisecondsInADay));
         } catch (SQLException e) {
              throw new RuntimeException(e);
         }
