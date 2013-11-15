@@ -42,67 +42,64 @@ public class DatabaseConnection {
         }
     }
 
-    public Stock getStock(String name, Date date, Time time) {
+    public Stock getStock(String name, Date date, Time time) throws SQLException {
         Stock stock = null;
 
-        try
-        {
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("select * from " + stockTableName +
-                    " where " + StockTableColumnNames.NAME + "=" + name + " and " +
-                                StockTableColumnNames.DAY + "=" + date + " and " +
-                                StockTableColumnNames.TIME + "=" + time);
+        Statement statement = connection.createStatement();
+        ResultSet resultSet = statement.executeQuery("select * from " + stockTableName +
+                " where " + StockTableColumnNames.NAME + "=" + name + " and " +
+                            StockTableColumnNames.DAY + "=" + date + " and " +
+                            StockTableColumnNames.TIME + "=" + time);
 
-            if (resultSet.next()) {
-                stock = new Stock(resultSet.getString(StockTableColumnNames.SYMBOL.toString()),
-                        resultSet.getString(StockTableColumnNames.NAME.toString()),
-                        resultSet.getDate(StockTableColumnNames.DAY.toString()),
-                        resultSet.getTime(StockTableColumnNames.TIME.toString()),
-                        resultSet.getDouble(StockTableColumnNames.VALUE.toString()));
-            }
-            statement.close();
+        if (resultSet.next()) {
+            stock = new Stock(resultSet.getString(StockTableColumnNames.SYMBOL.toString()),
+                    resultSet.getString(StockTableColumnNames.NAME.toString()),
+                    resultSet.getDate(StockTableColumnNames.DAY.toString()),
+                    resultSet.getTime(StockTableColumnNames.TIME.toString()),
+                    resultSet.getDouble(StockTableColumnNames.VALUE.toString()));
         }
-        catch (SQLException ex)
-        {
-            ex.printStackTrace();
-        }
+        statement.close();
+
 
         return stock;
     }
 
-    public Stock[] getStockPrices(String[] names, Date dates[], Time times[]) {
-        Stock[] stockBeans = new Stock[names.length];
-
-        for (int i = 0; i < names.length; i++) {
-            stockBeans[i] = getStock(names[i], dates[i], times[i]);
-        }
-
-        return stockBeans;
-    }
-
-    public ArrayList<Stock> getAllStocks() {
+    public ArrayList<Stock> getAllStocks() throws SQLException {
         ArrayList<Stock> allStocks = new ArrayList<Stock>(10000);
 
-        try {
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("select * from " + stockTableName);
+        Statement statement = connection.createStatement();
+        ResultSet resultSet = statement.executeQuery("select * from " + stockTableName);
 
-            while(resultSet.next()) {
-                allStocks.add(new Stock(resultSet.getString(StockTableColumnNames.SYMBOL.toString()),
-                        resultSet.getString(StockTableColumnNames.NAME.toString()),
-                        resultSet.getDate(StockTableColumnNames.DAY.toString()),
-                        resultSet.getTime(StockTableColumnNames.TIME.toString()),
-                        resultSet.getDouble(StockTableColumnNames.VALUE.toString())));
-            }
+        while(resultSet.next()) {
+            allStocks.add(new Stock(resultSet.getString(StockTableColumnNames.SYMBOL.toString()),
+                    resultSet.getString(StockTableColumnNames.NAME.toString()),
+                    resultSet.getDate(StockTableColumnNames.DAY.toString()),
+                    resultSet.getTime(StockTableColumnNames.TIME.toString()),
+                    resultSet.getDouble(StockTableColumnNames.VALUE.toString())));
+        }
 
-            statement.close();
-        }
-        catch (SQLException ex)
-        {
-            ex.printStackTrace();
-        }
+        statement.close();
 
         return allStocks;
+    }
+
+    public ArrayList<Stock> getStocksByDay(Date date) throws SQLException {
+        ArrayList<Stock> allStocksToday = new ArrayList<Stock>(10000);
+
+        Statement statement = connection.createStatement();
+        ResultSet resultSet = statement.executeQuery("select * from " + stockTableName +
+                " where " + StockTableColumnNames.DAY + "=" + date);
+
+        if (resultSet.next()) {
+            allStocksToday.add(new Stock(resultSet.getString(StockTableColumnNames.SYMBOL.toString()),
+                    resultSet.getString(StockTableColumnNames.NAME.toString()),
+                    resultSet.getDate(StockTableColumnNames.DAY.toString()),
+                    resultSet.getTime(StockTableColumnNames.TIME.toString()),
+                    resultSet.getDouble(StockTableColumnNames.VALUE.toString())));
+        }
+        statement.close();
+
+        return allStocksToday;
     }
 
     public void insertStock(Stock stock) {

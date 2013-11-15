@@ -1,5 +1,7 @@
 package common;
 
+import java.sql.Date;
+import java.sql.SQLException;
 import java.util.ArrayList;
 
 /**
@@ -12,11 +14,15 @@ public class Market {
     private int stockNdx;
 
     public Market() {
-        DatabaseConnection dbCon = new DatabaseConnection();
+        DatabaseConnection databaseConnection = new DatabaseConnection();
 
-        dbCon.connect();
-        stocks = dbCon.getAllStocks();
-        dbCon.disconnect();
+        databaseConnection.connect();
+        try {
+            stocks = databaseConnection.getStocksByDay(new Date(System.currentTimeMillis()));
+        } catch (SQLException e) {
+             throw new RuntimeException(e);
+        }
+        databaseConnection.disconnect();
 
         stockNdx = 0;
     }
