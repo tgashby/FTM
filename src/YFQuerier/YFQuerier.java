@@ -89,11 +89,15 @@ public class YFQuerier extends TimerTask {
         exchangeClose.setTimeZone(TimeZone.getTimeZone("EST"));
         exchangeClose.set(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH), 16, 0);
 
+        System.out.println("\nBeginning Stock Query " + cal.getTime());
+
         if (cal.after(exchangeOpen) && cal.before(exchangeClose) &&
                 cal.get(Calendar.DAY_OF_WEEK_IN_MONTH) != Calendar.SATURDAY &&
                 cal.get(Calendar.DAY_OF_WEEK_IN_MONTH) != Calendar.SUNDAY)
         {
             try {
+                System.out.println("Attempting to add the stock information to the DB");
+
                 URL yahooFinance = new URL("http://finance.yahoo.com/d/quotes.csv?s=" + urlOptions);
                 URLConnection yc = yahooFinance.openConnection();
 
@@ -111,7 +115,10 @@ public class YFQuerier extends TimerTask {
                             new Time(System.currentTimeMillis()), new Double(stockParts[2]));
 
                     dbCon.insertStock(stock);
+                    System.out.println(stockParts[0] + " added");
                 }
+
+                System.out.println("All Stocks Added");
 
                 in.close();
             }
@@ -124,6 +131,23 @@ public class YFQuerier extends TimerTask {
                 ioException.printStackTrace();
             }
         }
+        else
+        {
+            if (!cal.after(exchangeOpen))
+            {
+                System.out.println("No Transaction: Before market open (" + exchangeOpen.getTime() + ")");
+            }
+            else if (!cal.before(exchangeClose))
+            {
+                System.out.println("No Transaction: After market close (" + exchangeClose.getTime() + ")");
+            }
+            else
+            {
+                System.out.println("No Transaction: It's the weekend");
+            }
+        }
+
+        System.out.println("End Stock Query");
     }
 
     public void disconnect()

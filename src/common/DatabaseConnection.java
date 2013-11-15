@@ -38,6 +38,7 @@ public class DatabaseConnection {
         try {
             connection = DriverManager.getConnection(jdbcURL);
         } catch (SQLException e) {
+            System.out.println("Error while connecting to the database:");
             e.printStackTrace();
         }
     }
@@ -64,6 +65,7 @@ public class DatabaseConnection {
         }
         catch (SQLException ex)
         {
+            System.out.println("Error while getting a single stock:");
             ex.printStackTrace();
         }
 
@@ -99,6 +101,7 @@ public class DatabaseConnection {
         }
         catch (SQLException ex)
         {
+            System.out.println("Error while getting all stocks:");
             ex.printStackTrace();
         }
 
@@ -116,6 +119,7 @@ public class DatabaseConnection {
                     stockValue.getValue() + ");");
         }
         catch (SQLException ex) {
+            System.out.println("Error while inserting a stock:");
             ex.printStackTrace();
         }
     }
@@ -124,6 +128,7 @@ public class DatabaseConnection {
         try {
             connection.close();
         } catch (SQLException e) {
+            System.out.println("Error while disconnecting:");
             e.printStackTrace();
         }
     }
