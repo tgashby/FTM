@@ -42,23 +42,23 @@ public class DatabaseConnection {
         }
     }
 
-    public StockValue getStock(String name, Date date, Time time) {
-        StockValue stockValue = null;
+    public Stock getStock(String name, Date date, Time time) {
+        Stock stock = null;
 
         try
         {
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery("select * from " + stockTableName +
-                    " where " + StockColumnNames.NAME + "=" + name + " and " +
-                                StockColumnNames.DAY + "=" + date + " and " +
-                                StockColumnNames.TIME + "=" + time);
+                    " where " + StockTableColumnNames.NAME + "=" + name + " and " +
+                                StockTableColumnNames.DAY + "=" + date + " and " +
+                                StockTableColumnNames.TIME + "=" + time);
 
             if (resultSet.next()) {
-                stockValue = new StockValue(resultSet.getString(StockColumnNames.SYMBOL.toString()),
-                        resultSet.getString(StockColumnNames.NAME.toString()),
-                        resultSet.getDate(StockColumnNames.DAY.toString()),
-                        resultSet.getTime(StockColumnNames.TIME.toString()),
-                        resultSet.getDouble(StockColumnNames.VALUE.toString()));
+                stock = new Stock(resultSet.getString(StockTableColumnNames.SYMBOL.toString()),
+                        resultSet.getString(StockTableColumnNames.NAME.toString()),
+                        resultSet.getDate(StockTableColumnNames.DAY.toString()),
+                        resultSet.getTime(StockTableColumnNames.TIME.toString()),
+                        resultSet.getDouble(StockTableColumnNames.VALUE.toString()));
             }
             statement.close();
         }
@@ -67,11 +67,11 @@ public class DatabaseConnection {
             ex.printStackTrace();
         }
 
-        return stockValue;
+        return stock;
     }
 
-    public StockValue[] getStockPrices(String[] names, Date dates[], Time times[]) {
-        StockValue[] stockBeans = new StockValue[names.length];
+    public Stock[] getStockPrices(String[] names, Date dates[], Time times[]) {
+        Stock[] stockBeans = new Stock[names.length];
 
         for (int i = 0; i < names.length; i++) {
             stockBeans[i] = getStock(names[i], dates[i], times[i]);
@@ -80,19 +80,19 @@ public class DatabaseConnection {
         return stockBeans;
     }
 
-    public ArrayList<StockValue> getAllStocks() {
-        ArrayList<StockValue> allStocks = new ArrayList<StockValue>(10000);
+    public ArrayList<Stock> getAllStocks() {
+        ArrayList<Stock> allStocks = new ArrayList<Stock>(10000);
 
         try {
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery("select * from " + stockTableName);
 
             while(resultSet.next()) {
-                allStocks.add(new StockValue(resultSet.getString(StockColumnNames.SYMBOL.toString()),
-                        resultSet.getString(StockColumnNames.NAME.toString()),
-                        resultSet.getDate(StockColumnNames.DAY.toString()),
-                        resultSet.getTime(StockColumnNames.TIME.toString()),
-                        resultSet.getDouble(StockColumnNames.VALUE.toString())));
+                allStocks.add(new Stock(resultSet.getString(StockTableColumnNames.SYMBOL.toString()),
+                        resultSet.getString(StockTableColumnNames.NAME.toString()),
+                        resultSet.getDate(StockTableColumnNames.DAY.toString()),
+                        resultSet.getTime(StockTableColumnNames.TIME.toString()),
+                        resultSet.getDouble(StockTableColumnNames.VALUE.toString())));
             }
 
             statement.close();
@@ -105,15 +105,15 @@ public class DatabaseConnection {
         return allStocks;
     }
 
-    public void insertStock(StockValue stockValue) {
+    public void insertStock(Stock stock) {
         try {
             Statement statement = connection.createStatement();
             statement.execute("insert into " + stockTableName + " values ( " +
-                    "'" + stockValue.getSymbol() + "'," +
-                    "'" + stockValue.getName() + "'," +
-                    "'" + stockValue.getDate() + "'," +
-                    "'" + stockValue.getTime() + "'," +
-                    stockValue.getValue() + ");");
+                    "'" + stock.getSymbol() + "'," +
+                    "'" + stock.getName() + "'," +
+                    "'" + stock.getDate() + "'," +
+                    "'" + stock.getTime() + "'," +
+                    stock.getValue() + ");");
         }
         catch (SQLException ex) {
             ex.printStackTrace();

@@ -7,14 +7,14 @@ package common; /**
 import java.sql.Time;
 import java.sql.Date;
 
-public class StockValue {
+public class Stock {
    protected String symbol;
    protected String name;
    protected Date date;
    protected Time time;
    protected double value;
 
-   public StockValue(String s, String n, Date d, Time t, double v) {
+   public Stock(String s, String n, Date d, Time t, double v) {
       symbol = s;
       name = n;
       date = d;

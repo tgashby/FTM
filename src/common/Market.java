@@ -8,7 +8,7 @@ import java.util.ArrayList;
  * Time: 6:47 AM
  */
 public class Market {
-    private ArrayList<StockValue> stocks;
+    private ArrayList<Stock> stocks;
     private int stockNdx;
 
     public Market() {
@@ -21,16 +21,20 @@ public class Market {
         stockNdx = 0;
     }
 
-    public StockValue getNextValue()
+    public Stock getNextValue()
     {
-        StockValue toReturn = null;
+        Stock toReturn = null;
 
-        if (stockNdx < stocks.size())
+        if (hasNextValue())
         {
             toReturn = stocks.get(stockNdx);
             stockNdx++;
         }
 
         return toReturn;
+    }
+
+    public boolean hasNextValue() {
+        return stockNdx < stocks.size();
     }
 }
