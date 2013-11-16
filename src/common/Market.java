@@ -18,7 +18,7 @@ public class Market {
 
         databaseConnection.connect();
         try {
-            stocks = databaseConnection.getStocksByDay(new java.sql.Date(System.currentTimeMillis() - millisecondsInADay));
+            stocks = databaseConnection.getStocksByDay(new java.sql.Date(System.currentTimeMillis() - millisecondsInADay * 2));
         } catch (SQLException e) {
              throw new RuntimeException(e);
         }

@@ -90,7 +90,7 @@ public class DatabaseConnection {
         ResultSet resultSet = statement.executeQuery("select * from " + stockTableName +
                 " where " + StockTableColumnNames.DAY + "=" + " date('" + date + "')");
 
-        if (resultSet.next()) {
+        while (resultSet.next()) {
             allStocksToday.add(new Stock(resultSet.getString(StockTableColumnNames.SYMBOL.toString()),
                     resultSet.getString(StockTableColumnNames.NAME.toString()),
                     resultSet.getDate(StockTableColumnNames.DAY.toString()),
