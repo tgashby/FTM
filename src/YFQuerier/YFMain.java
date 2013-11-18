@@ -19,7 +19,7 @@ public class YFMain {
         }
         else
         {
-            stocksToQuery = new String[] {"MSFT", "GOOG", "OLN", "KR", "TWTR", "TDC", "MSI", "VZ", "BA", "BKW"};
+            stocksToQuery = new String[] {"MSFT", "GOOG", "OLN", "KR", "RTN", "TDC", "MSI", "VZ", "BA", "BKW"};
         }
 
         Timer yfRunner = new Timer();
