@@ -102,26 +102,17 @@ public class DatabaseConnection {
         return allStocksToday;
     }
 
-    public void insertStock(Stock stock) {
-        try {
-            Statement statement = connection.createStatement();
-            statement.execute("insert into " + stockTableName + " values ( " +
-                    "'" + stock.getSymbol() + "'," +
-                    "'" + stock.getName() + "'," +
-                    "'" + stock.getDate() + "'," +
-                    "'" + stock.getTime() + "'," +
-                    stock.getValue() + ");");
-        }
-        catch (SQLException ex) {
-            ex.printStackTrace();
-        }
+    public void insertStock(Stock stock) throws SQLException {
+        Statement statement = connection.createStatement();
+        statement.execute("insert into " + stockTableName + " values ( " +
+                "'" + stock.getSymbol() + "'," +
+                "'" + stock.getName() + "'," +
+                "'" + stock.getDate() + "'," +
+                "'" + stock.getTime() + "'," +
+                stock.getValue() + ");");
     }
 
-    public void disconnect() {
-        try {
-            connection.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+    public void disconnect() throws SQLException {
+        connection.close();
     }
 }

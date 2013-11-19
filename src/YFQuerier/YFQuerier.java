@@ -10,6 +10,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.sql.Date;
+import java.sql.SQLException;
 import java.sql.Time;
 import java.util.TimerTask;
 
@@ -103,10 +104,17 @@ public class YFQuerier extends TimerTask {
         {
             ioException.printStackTrace();
         }
+        catch (SQLException sqlException) {
+            sqlException.printStackTrace();
+        }
     }
 
     public void disconnect()
     {
-        dbCon.disconnect();
+        try {
+            dbCon.disconnect();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }
