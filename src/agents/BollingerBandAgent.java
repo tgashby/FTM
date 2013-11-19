@@ -15,7 +15,8 @@ import java.util.concurrent.ArrayBlockingQueue;
  * Time: 9:45 PM
  */
 public class BollingerBandAgent {
-    private Market market = new Market();
+    private final int millisecondsInADay = 86400000;
+    private Market market = new Market(new java.sql.Date(System.currentTimeMillis() - millisecondsInADay));
     private Stock stock;
     private ArrayList<String> stockSymbolsToTrade;
     private double wallet;

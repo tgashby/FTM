@@ -7,7 +7,6 @@ public class AgentMain {
         ArrayList<String> valuesToTrade = new ArrayList<String>(10);
         valuesToTrade.add("VZ");
         valuesToTrade.add("KR");
-        valuesToTrade.add("TWTR");
         valuesToTrade.add("BKW");
         valuesToTrade.add("GOOG");
         valuesToTrade.add("MSFT");
