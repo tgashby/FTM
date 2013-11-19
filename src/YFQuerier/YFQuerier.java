@@ -70,7 +70,11 @@ public class YFQuerier extends TimerTask {
         urlOptions += "&f=" + options;
 
         dbCon = new DatabaseConnection();
-        dbCon.connect();
+        try {
+            dbCon.connect();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

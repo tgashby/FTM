@@ -34,12 +34,8 @@ public class DatabaseConnection {
         jdbcURL = jdbcURLBuilder.toString();
     }
 
-    public void connect() {
-        try {
-            connection = DriverManager.getConnection(jdbcURL);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+    public void connect() throws SQLException {
+        connection = DriverManager.getConnection(jdbcURL);
     }
 
     public Stock getStock(String name, Date date, Time time) throws SQLException {
