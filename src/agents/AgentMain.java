@@ -1,6 +1,7 @@
 package agents;
 
 import common.Market;
+import common.MarketTypeEnum;
 import common.StockValue;
 
 /**
@@ -10,7 +11,7 @@ import common.StockValue;
  */
 public class AgentMain {
     public static void main(String[] args) {
-        Market market = new Market();
+        Market market = new Market(MarketTypeEnum.ALL_STOCKS);
         StockValue stock;
         double wallet = 500.00;
         double lastValue = 0.00;
