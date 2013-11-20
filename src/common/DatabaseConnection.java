@@ -108,6 +108,60 @@ public class DatabaseConnection {
         return allStocks;
     }
 
+    public ArrayList<StockValue> getAllStocksBySymbol(String symbol) {
+        ArrayList<StockValue> allStocks = new ArrayList<StockValue>(10000);
+
+        try {
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery("select * from " + stockTableName +
+             " where symbol='" + symbol + "'");
+
+            while(resultSet.next()) {
+                allStocks.add(new StockValue(resultSet.getString(StockColumnNames.SYMBOL.toString()),
+                        resultSet.getString(StockColumnNames.NAME.toString()),
+                        resultSet.getDate(StockColumnNames.DAY.toString()),
+                        resultSet.getTime(StockColumnNames.TIME.toString()),
+                        resultSet.getDouble(StockColumnNames.VALUE.toString())));
+            }
+
+            statement.close();
+        }
+        catch (SQLException ex)
+        {
+            System.out.println("Error while getting all stocks:");
+            ex.printStackTrace();
+        }
+
+        return allStocks;
+    }
+
+    public ArrayList<StockValue> getAllStocksByDate(Date date) {
+        ArrayList<StockValue> allStocks = new ArrayList<StockValue>(10000);
+
+        try {
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery("select * from " + stockTableName +
+                    " where day='" + date + "'");
+
+            while(resultSet.next()) {
+                allStocks.add(new StockValue(resultSet.getString(StockColumnNames.SYMBOL.toString()),
+                        resultSet.getString(StockColumnNames.NAME.toString()),
+                        resultSet.getDate(StockColumnNames.DAY.toString()),
+                        resultSet.getTime(StockColumnNames.TIME.toString()),
+                        resultSet.getDouble(StockColumnNames.VALUE.toString())));
+            }
+
+            statement.close();
+        }
+        catch (SQLException ex)
+        {
+            System.out.println("Error while getting all stocks:");
+            ex.printStackTrace();
+        }
+
+        return allStocks;
+    }
+
     public void insertStock(StockValue stockValue) {
         try {
             Statement statement = connection.createStatement();
@@ -126,10 +180,21 @@ public class DatabaseConnection {
 
     public void disconnect() {
         try {
-            connection.close();
+            if (!connection.isClosed())
+            {
+                connection.close();
+            }
         } catch (SQLException e) {
             System.out.println("Error while disconnecting:");
             e.printStackTrace();
         }
+    }
+
+    @Override
+    protected void finalize() throws Throwable
+    {
+        this.disconnect();
+
+        super.finalize();
     }
 }
