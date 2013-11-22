@@ -11,7 +11,6 @@ import java.util.concurrent.ArrayBlockingQueue;
 public class BasicStatistics {
     private ArrayBlockingQueue<Double> sample;
     private double mean;
-    private double standardDeviation;
 
     public BasicStatistics(int sampleSize) {
         sample = new ArrayBlockingQueue<Double>(sampleSize);
