@@ -33,7 +33,6 @@ public class AR1Agent extends MultipleStockTraderAgent {
         }
     }
 
-    //TODO: save current hash map value in cur variable to clean up code
     @Override
     public void trade(Stock stock) {
         if (stockSymbolsToTrade.contains(stock.getSymbol())) {
@@ -71,16 +70,6 @@ public class AR1Agent extends MultipleStockTraderAgent {
     @Override
     public String getAgentName() {
         return "First Order Autoregressive Model Agent";
-    }
-
-    @Override
-    public int getTotalNumberOfStocks() {
-        return 0;
-    }
-
-    @Override
-    public double getNetWorth() {
-        return 0;
     }
 
     private void fixIndependenceAssumption(EnhancedSimpleRegression currentRegression) throws UnconclusiveTestException {
