@@ -1,8 +1,10 @@
 package agents;
 
-import common.Market;
 import common.StockValue;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -13,21 +15,40 @@ import java.util.concurrent.ArrayBlockingQueue;
  * Date: 11/5/13
  * Time: 9:45 PM
  */
-public class BollingerBandAgent {
-    private final int millisecondsInADay = 86400000;
-    private Market market = new Market(new java.sql.Date(System.currentTimeMillis() - millisecondsInADay));
+public class BollingerBandAgent implements AgentInterface {
     private StockValue stockValue;
     private ArrayList<String> stockSymbolsToTrade;
     private double wallet;
     private HashMap<String, Integer> numberOfShares;
     private HashMap<String, Double> lastValues;
+    private double intiialWallet;
 
     private int movingAverageSampleSize;
     private int bandWidth;
     private HashMap<String, ArrayBlockingQueue<StockValue>> stockValueQueues;
     private HashMap<String, BasicStatistics> basicStatistics;
 
+    public BollingerBandAgent() {
+        ArrayList<String> stockSymbolsToTrade = new ArrayList<String>()
+        {{
+        add("VZ");
+        add("KR");
+        add("BKW");
+        add("GOOG");
+        add("MSFT");
+        add("OLN");
+        add("BA");
+        add("TDC");
+        }};
+
+        initValues(stockSymbolsToTrade, 50000, 40, 2);
+    }
+
     public BollingerBandAgent(ArrayList<String> stockSymbolsToTrade, int wallet, int movingAverageSampleSize, int bandWidth) {
+        initValues(stockSymbolsToTrade, wallet, movingAverageSampleSize, bandWidth);
+    }
+
+    private void initValues(ArrayList<String> stockSymbolsToTrade, int wallet, int movingAverageSampleSize, int bandWidth) {
         this.stockSymbolsToTrade = stockSymbolsToTrade;
         this.wallet = wallet;
         this.movingAverageSampleSize = movingAverageSampleSize;
@@ -43,15 +64,12 @@ public class BollingerBandAgent {
             numberOfShares.put(stockSymbolsToTrade.get(i), 0);
         }
 
-        System.out.println("Initial wallet is $" + wallet);
+        this.intiialWallet = wallet;
     }
 
-    public void startTrading() {
-        while (market.hasNextValue() && wallet >= 0) {
-            stockValue = market.getNextValue();
-            //only trade the stocks specified
-            if (!stockSymbolsToTrade.contains(stockValue.getSymbol()))
-                continue;
+    @Override
+    public void trade(StockValue stockValue) {
+        if (stockSymbolsToTrade.contains(stockValue.getSymbol())) {
             //set last values
             lastValues.put(stockValue.getSymbol(), stockValue.getValue());
             //initialize q with 1st movingAverageSampleSize stocks. Temporary until market method is created to do this.
@@ -69,6 +87,29 @@ public class BollingerBandAgent {
                 doTrade(stockValue);
             }
         }
+    }
+
+    @Override
+    public String getResults() {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        PrintStream printStream = new PrintStream(byteArrayOutputStream);
+
+        printStream.print("Initial wallet is $%.2f" + intiialWallet);
+        printStream.printf("Final wallet is $%.2f" + wallet);
+        printStream.print("Portfolio has " + getFinalStockCounts());
+        printStream.printf("Net worth is $%.2f", getNetWorth());
+
+        String leftAlignFormat = "| %-8s | %-9d |%n";
+
+        printStream.format("+----------+------------+%n");
+        printStream.printf("| Stock    | Frequency  |%n");
+        printStream.format("+----------+------------+%n");
+        for (int i = 0; i < stockSymbolsToTrade.size(); i++) {
+            printStream.format(leftAlignFormat, stockSymbolsToTrade.get(i), numberOfShares.get(stockSymbolsToTrade.get(i)));
+        }
+        printStream.format("+----------+------------+%n");
+
+        return byteArrayOutputStream.toString();
     }
 
     private void doTrade(StockValue stockValue) {
@@ -103,11 +144,7 @@ public class BollingerBandAgent {
         basicStatistics.get(newValue.getSymbol()).add(newValue.getValue());
     }
 
-    public double getFinalWallet() {
-        return wallet;
-    }
-
-    public int getFinalStockCounts() {
+    private int getFinalStockCounts() {
         int sum = 0;
 
         for (int i = 0; i < numberOfShares.size(); i++)
@@ -115,19 +152,7 @@ public class BollingerBandAgent {
         return sum;
     }
 
-    public void printStockNameAndFrequencyOutput() {
-        String leftAlignFormat = "| %-8s | %-9d |%n";
-
-        System.out.format("+----------+------------+%n");
-        System.out.printf("| Stock    | Frequency  |%n");
-        System.out.format("+----------+------------+%n");
-        for (int i = 0; i < stockSymbolsToTrade.size(); i++) {
-            System.out.format(leftAlignFormat, stockSymbolsToTrade.get(i), numberOfShares.get(stockSymbolsToTrade.get(i)));
-        }
-        System.out.format("+----------+------------+%n");
-    }
-
-    public double getNetWorth() {
+    private double getNetWorth() {
         int portfolioWorth = 0;
 
         for (int i = 0; i < numberOfShares.size(); i++) {
@@ -135,6 +160,7 @@ public class BollingerBandAgent {
         }
         return wallet + portfolioWorth;
     }
+
 
     private class BasicStatistics {
         private ArrayBlockingQueue<Double> sample;
