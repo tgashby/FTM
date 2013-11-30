@@ -1,7 +1,7 @@
 package YFQuerier;
 
 import common.DatabaseConnection;
-import common.StockValue;
+import common.Stock;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -87,10 +87,10 @@ public class YFQuerier extends TimerTask {
             for (int i = 0; i < stockParts.length; i++)
                 stockParts[i] = stockParts[i].replaceAll("\"", "");
 
-            StockValue stockValue = new StockValue(stockParts[0], stockParts[1], new Date(new java.util.Date().getTime()),
+            Stock stock = new Stock(stockParts[0], stockParts[1], new Date(new java.util.Date().getTime()),
                     new Time(System.currentTimeMillis()), new Double(stockParts[2]));
 
-            dbCon.insertStock(stockValue);
+            dbCon.insertStock(stock);
 
             in.close();
         } catch (MalformedURLException urlException) {

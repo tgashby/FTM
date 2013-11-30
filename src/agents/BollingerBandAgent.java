@@ -1,9 +1,7 @@
 package agents;
 
-import common.StockValue;
+import common.Stock;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -21,7 +19,7 @@ public class BollingerBandAgent extends Agent {
 
     private int movingAverageSampleSize;
     private int bandWidth;
-    private HashMap<String, ArrayBlockingQueue<StockValue>> stockValueQueues;
+    private HashMap<String, ArrayBlockingQueue<Stock>> stockValueQueues;
     private HashMap<String, BasicStatistics> basicStatistics;
 
     public BollingerBandAgent(double capital) {
@@ -48,30 +46,30 @@ public class BollingerBandAgent extends Agent {
         this.bandWidth = bandWidth;
         numberOfShares = new HashMap<String, Integer>(stockSymbolsToTrade.size());
         lastValues = new HashMap<String, Double>(stockSymbolsToTrade.size());
-        stockValueQueues = new HashMap<String, ArrayBlockingQueue<StockValue>>(stockSymbolsToTrade.size());
+        stockValueQueues = new HashMap<String, ArrayBlockingQueue<Stock>>(stockSymbolsToTrade.size());
         basicStatistics = new HashMap<String, BasicStatistics>(stockSymbolsToTrade.size());
 
         for (int i = 0; i < stockSymbolsToTrade.size(); i++) {
-            stockValueQueues.put(stockSymbolsToTrade.get(i), new ArrayBlockingQueue<StockValue>(movingAverageSampleSize));
+            stockValueQueues.put(stockSymbolsToTrade.get(i), new ArrayBlockingQueue<Stock>(movingAverageSampleSize));
             basicStatistics.put(stockSymbolsToTrade.get(i), new BasicStatistics(movingAverageSampleSize));
             numberOfShares.put(stockSymbolsToTrade.get(i), 0);
         }
     }
 
     @Override
-    public void trade(StockValue stockValue) {
-        if (stockSymbolsToTrade.contains(stockValue.getSymbol())) {
-            lastValues.put(stockValue.getSymbol(), stockValue.getValue());
-            if (stockValueQueues.get(stockValue.getSymbol()).size() < movingAverageSampleSize) {
-                stockValueQueues.get(stockValue.getSymbol()).add(stockValue);
-                basicStatistics.get(stockValue.getSymbol()).add(stockValue.getValue());
-            } else if (stockValueQueues.get(stockValue.getSymbol()).size() == movingAverageSampleSize) {
-                doTrade(stockValue);
-                refreshQAndStats(stockValue);
-                doTrade(stockValue);
+    public void trade(Stock stock) {
+        if (stockSymbolsToTrade.contains(stock.getSymbol())) {
+            lastValues.put(stock.getSymbol(), stock.getValue());
+            if (stockValueQueues.get(stock.getSymbol()).size() < movingAverageSampleSize) {
+                stockValueQueues.get(stock.getSymbol()).add(stock);
+                basicStatistics.get(stock.getSymbol()).add(stock.getValue());
+            } else if (stockValueQueues.get(stock.getSymbol()).size() == movingAverageSampleSize) {
+                doTrade(stock);
+                refreshQAndStats(stock);
+                doTrade(stock);
             } else {
-                refreshQAndStats(stockValue);
-                doTrade(stockValue);
+                refreshQAndStats(stock);
+                doTrade(stock);
             }
         }
     }
@@ -112,32 +110,32 @@ public class BollingerBandAgent extends Agent {
         System.out.format("+----------+------------+%n");
     }
 
-    private void doTrade(StockValue stockValue) {
-        double mean = basicStatistics.get(stockValue.getSymbol()).getMean();
-        double standardDeviation = basicStatistics.get(stockValue.getSymbol()).getStandardDeviation();
+    private void doTrade(Stock stock) {
+        double mean = basicStatistics.get(stock.getSymbol()).getMean();
+        double standardDeviation = basicStatistics.get(stock.getSymbol()).getStandardDeviation();
         double lowerBound = mean - standardDeviation * bandWidth;
         double upperBound = mean + standardDeviation * bandWidth;
-        int currentNumberOfShares = numberOfShares.get(stockValue.getSymbol());
+        int currentNumberOfShares = numberOfShares.get(stock.getSymbol());
 
         //undervalued
-        if (stockValue.getValue() < lowerBound) {
+        if (stock.getValue() < lowerBound) {
             //buy
-            if (wallet - stockValue.getValue() > 0) {
-                wallet -= stockValue.getValue();
-                numberOfShares.put(stockValue.getSymbol(), currentNumberOfShares + 1);
+            if (wallet - stock.getValue() > 0) {
+                wallet -= stock.getValue();
+                numberOfShares.put(stock.getSymbol(), currentNumberOfShares + 1);
             }
         }
         //overvalued
-        else if (stockValue.getValue() > upperBound) {
+        else if (stock.getValue() > upperBound) {
             //sell
             if (currentNumberOfShares > 0) {
-                numberOfShares.put(stockValue.getSymbol(), currentNumberOfShares - 1);
-                wallet += stockValue.getValue();
+                numberOfShares.put(stock.getSymbol(), currentNumberOfShares - 1);
+                wallet += stock.getValue();
             }
         }
     }
 
-    private void refreshQAndStats(StockValue newValue) {
+    private void refreshQAndStats(Stock newValue) {
         stockValueQueues.get(newValue.getSymbol()).remove();
         stockValueQueues.get(newValue.getSymbol()).add(newValue);
         basicStatistics.get(newValue.getSymbol()).removeOldestValue();

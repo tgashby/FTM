@@ -5,14 +5,14 @@ import org.apache.commons.lang.StringEscapeUtils;
 import java.sql.Date;
 import java.sql.Time;
 
-public class StockValue {
+public class Stock {
     private String symbol;
     private String name;
     private Date date;
     private Time time;
     private double value;
 
-    public StockValue(String symbol, String name, Date date, Time time, double value) {
+    public Stock(String symbol, String name, Date date, Time time, double value) {
         this.symbol = StringEscapeUtils.escapeSql(symbol);
         this.name = StringEscapeUtils.escapeSql(name);
         this.date = date;

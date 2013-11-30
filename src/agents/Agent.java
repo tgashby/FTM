@@ -1,6 +1,6 @@
 package agents;
 
-import common.StockValue;
+import common.Stock;
 
 /**
  * Agent interfacce class. Please make your agent implement all of these
@@ -27,7 +27,7 @@ public abstract class Agent {
         wallet = initialWallet = initialCapital;
     }
 
-    public abstract void trade(StockValue stockValue);
+    public abstract void trade(Stock stock);
     public abstract String getAgentName();
     public abstract int getTotalNumberOfStocks();
     public abstract double getNetWorth();

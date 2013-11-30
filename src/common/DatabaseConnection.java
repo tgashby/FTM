@@ -38,8 +38,8 @@ public class DatabaseConnection {
         connection = DriverManager.getConnection(jdbcURL);
     }
 
-    public StockValue getStock(String name, Date date, Time time) throws SQLException {
-        StockValue stockValue = null;
+    public Stock getStock(String name, Date date, Time time) throws SQLException {
+        Stock stock = null;
 
         Statement statement = connection.createStatement();
         ResultSet resultSet = statement.executeQuery("select * from " + stockTableName +
@@ -48,7 +48,7 @@ public class DatabaseConnection {
                             StockTableColumnNames.TIME + "=" + time);
 
         if (resultSet.next()) {
-            stockValue = new StockValue(resultSet.getString(StockTableColumnNames.SYMBOL.toString()),
+            stock = new Stock(resultSet.getString(StockTableColumnNames.SYMBOL.toString()),
                     resultSet.getString(StockTableColumnNames.NAME.toString()),
                     resultSet.getDate(StockTableColumnNames.DAY.toString()),
                     resultSet.getTime(StockTableColumnNames.TIME.toString()),
@@ -56,11 +56,11 @@ public class DatabaseConnection {
         }
         statement.close();
 
-        return stockValue;
+        return stock;
     }
 
-    public StockValue[] getStockPrices(String[] names, Date dates[], Time times[]) throws SQLException {
-        StockValue[] stockBeans = new StockValue[names.length];
+    public Stock[] getStockPrices(String[] names, Date dates[], Time times[]) throws SQLException {
+        Stock[] stockBeans = new Stock[names.length];
 
         for (int i = 0; i < names.length; i++) {
             stockBeans[i] = getStock(names[i], dates[i], times[i]);
@@ -69,14 +69,14 @@ public class DatabaseConnection {
         return stockBeans;
     }
 
-    public ArrayList<StockValue> getAllStocks() throws SQLException {
-        ArrayList<StockValue> allStocks = new ArrayList<StockValue>(10000);
+    public ArrayList<Stock> getAllStocks() throws SQLException {
+        ArrayList<Stock> allStocks = new ArrayList<Stock>(10000);
 
         Statement statement = connection.createStatement();
         ResultSet resultSet = statement.executeQuery("select * from " + stockTableName);
 
         while(resultSet.next()) {
-            allStocks.add(new StockValue(resultSet.getString(StockTableColumnNames.SYMBOL.toString()),
+            allStocks.add(new Stock(resultSet.getString(StockTableColumnNames.SYMBOL.toString()),
                     resultSet.getString(StockTableColumnNames.NAME.toString()),
                     resultSet.getDate(StockTableColumnNames.DAY.toString()),
                     resultSet.getTime(StockTableColumnNames.TIME.toString()),
@@ -88,15 +88,15 @@ public class DatabaseConnection {
         return allStocks;
     }
 
-    public ArrayList<StockValue> getStocksByDay(Date date) throws SQLException {
-        ArrayList<StockValue> allStocksToday = new ArrayList<StockValue>(50000);
+    public ArrayList<Stock> getStocksByDay(Date date) throws SQLException {
+        ArrayList<Stock> allStocksToday = new ArrayList<Stock>(50000);
 
         Statement statement = connection.createStatement();
         ResultSet resultSet = statement.executeQuery("select * from " + stockTableName +
                 " where " + StockTableColumnNames.DAY + "=" + " date('" + date + "')");
 
         while (resultSet.next()) {
-            allStocksToday.add(new StockValue(resultSet.getString(StockTableColumnNames.SYMBOL.toString()),
+            allStocksToday.add(new Stock(resultSet.getString(StockTableColumnNames.SYMBOL.toString()),
                     resultSet.getString(StockTableColumnNames.NAME.toString()),
                     resultSet.getDate(StockTableColumnNames.DAY.toString()),
                     resultSet.getTime(StockTableColumnNames.TIME.toString()),
@@ -107,14 +107,14 @@ public class DatabaseConnection {
         return allStocksToday;
     }
 
-    public void insertStock(StockValue stockValue) throws SQLException {
+    public void insertStock(Stock stock) throws SQLException {
         Statement statement = connection.createStatement();
         statement.execute("insert into " + stockTableName + " values ( " +
-                "'" + stockValue.getSymbol() + "'," +
-                "'" + stockValue.getName() + "'," +
-                "'" + stockValue.getDate() + "'," +
-                "'" + stockValue.getTime() + "'," +
-                stockValue.getValue() + ");");
+                "'" + stock.getSymbol() + "'," +
+                "'" + stock.getName() + "'," +
+                "'" + stock.getDate() + "'," +
+                "'" + stock.getTime() + "'," +
+                stock.getValue() + ");");
     }
 
     public void disconnect() {

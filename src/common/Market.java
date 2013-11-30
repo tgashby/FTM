@@ -3,7 +3,6 @@ package common;
 import agents.Agent;
 import agents.BollingerBandAgent;
 
-import java.sql.Date;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -14,7 +13,7 @@ import java.util.Iterator;
  * Time: 6:47 AM
  */
 public class Market {
-    private ArrayList<StockValue> stockValues;
+    private ArrayList<Stock> stocks;
     private final int millisecondsInADay = 86400000;
     private ArrayList<Agent> agents;
     private int walletInUSDollars = 5000;
@@ -23,8 +22,8 @@ public class Market {
         DatabaseConnection databaseConnection = new DatabaseConnection();
 
         databaseConnection.connect();
-        //stockValues = databaseConnection.getStocksByDay(new Date(System.currentTimeMillis()));
-        stockValues = databaseConnection.getAllStocks();
+        //stocks = databaseConnection.getStocksByDay(new Date(System.currentTimeMillis()));
+        stocks = databaseConnection.getAllStocks();
         databaseConnection.disconnect();
 
         /**
@@ -40,13 +39,13 @@ public class Market {
     }
 
     public void executeTrades() {
-        Iterator<StockValue> stockValueIterator = stockValues.iterator();
+        Iterator<Stock> stockValueIterator = stocks.iterator();
 
         while (stockValueIterator.hasNext()) {
-            StockValue currentStockValue = stockValueIterator.next();
+            Stock currentStock = stockValueIterator.next();
 
             for (int i = 0; i < agents.size(); i++) {
-                agents.get(i).trade(currentStockValue);
+                agents.get(i).trade(currentStock);
             }
         }
     }
