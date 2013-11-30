@@ -1,6 +1,8 @@
 package agents;
 
 import common.Stock;
+import org.apache.commons.math3.distribution.TDistribution;
+import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.apache.commons.math3.stat.regression.RegressionResults;
 import org.apache.commons.math3.stat.regression.SimpleRegression;
 
@@ -14,13 +16,18 @@ import java.util.ArrayList;
  */
 public class AR1Agent {
     int sampleSize;
-    double alphaLevels;
+    double alphaLevel;
     ArrayList<Stock> stocks = new ArrayList<Stock>(1000);
     EnhancedSimpleRegression simpleRegression = new EnhancedSimpleRegression();
 
+    public AR1Agent() {
+        sampleSize = 50;
+        alphaLevel = 0.10;
+    }
+
     public AR1Agent(int sampleSize, double alphaTestLevels) {
         this.sampleSize = sampleSize;
-        this.alphaLevels = alphaTestLevels;
+        this.alphaLevel = alphaTestLevels;
     }
 
     public void trade(Stock stock) {
@@ -31,8 +38,8 @@ public class AR1Agent {
             return;
 
         fixIndependenceAssumption();
-        if (simpleRegression.testForLinearity(0.05) && simpleRegression.testForNormality(0.05) &&
-                simpleRegression.testForEqualVariances(0.05)) {
+        if (simpleRegression.testForLinearity(alphaLevel) && simpleRegression.testForNormality(alphaLevel) &&
+                simpleRegression.testForEqualVariances(alphaLevel)) {
             RegressionResults results = simpleRegression.regress();
             simpleRegression.getSignificance();
             //if time is a significant predictor, then construct a PI for the next time period ahead.
@@ -47,7 +54,7 @@ public class AR1Agent {
         //if we fail to reject, good to forecast
         if (rejectNullHypothesis) {
             //fix autocorrelation (estimate ro or assume ro is 1) and check for under or over autocorrelation
-            //if still autocorrelated
+            //if still autocorrelated, move on
         }
     }
 
@@ -65,17 +72,13 @@ public class AR1Agent {
 
     private class EnhancedSimpleRegression extends SimpleRegression {
         ArrayList<Double> residuals = new ArrayList<Double>(100);
+        SummaryStatistics xValues = new SummaryStatistics();
 
         @Override
         public void addData(final double x, final double y) {
             super.addData(x, y);
             residuals.add(y - super.predict(x));
-        }
-
-        @Override
-        public void removeData(final double x, final double y) {
-            super.removeData(x, y);
-            residuals.remove(y - super.predict(x));
+            xValues.addValue(x);
         }
 
         public double getDurbinWatsonStatistic() {
@@ -85,36 +88,36 @@ public class AR1Agent {
             return durbinWatsonStatisticNumerator / super.getSumSquaredErrors();
         }
 
-        public double[][] getPredictionInterval(double x) {
+        public double[][] getPredictionInterval(double x, double alphaLevel) throws NoSuchFieldException, IllegalAccessException {
             double pointPrediction = super.predict(x);
-            double moe = getMarginOfError(x);
+            double moe = getMarginOfError(x, alphaLevel);
             return new double[][] { { pointPrediction - moe }, { pointPrediction + moe } };
         }
 
-        private double getMarginOfError(double x) {
-            double tCriticalValue = 0;
+        private double getMarginOfError(double x, double alphaLevel) throws NoSuchFieldException, IllegalAccessException {
             double residualStandardDeviation = super.getSumSquaredErrors() / (super.getN() - 2);
             double standardizedSquareOfX = Math.pow(x - getXBar(), 2);
             double degreesOfFreedom = super.getN() - 1;
-            double squareSampleStandardDeviationOfX = 0;
 
-            return tCriticalValue * residualStandardDeviation * Math.sqrt(1 + (1 / super.getN()) + (standardizedSquareOfX /
-                    (degreesOfFreedom * squareSampleStandardDeviationOfX)));
+            return getTCriticalValue(degreesOfFreedom, alphaLevel) * residualStandardDeviation * Math.sqrt(1 + (1 / super.getN()) + (standardizedSquareOfX /
+                    (degreesOfFreedom * getSquareSampleStandardDeviationOfX())));
         }
 
-        private double getXBar() {
-            Double xBar = null;
-            try {
-                Field xBarField = this.getClass().getSuperclass().getDeclaredField("xbar");
-                xBarField.setAccessible(true);
-                xBar = (Double) xBarField.get(this);
-            } catch (NoSuchFieldException e) {
-                e.printStackTrace();
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            }
+        private double getXBar() throws IllegalAccessException, NoSuchFieldException {
+            Field xBarField = this.getClass().getSuperclass().getDeclaredField("xbar");
+            xBarField.setAccessible(true);
+            Double xBar = (Double) xBarField.get(this);
 
             return xBar;
+        }
+
+        private double getTCriticalValue(double degreesOfFreedom, double alphaLevel) {
+            TDistribution tDistribution = new TDistribution(degreesOfFreedom);
+            return tDistribution.cumulativeProbability(alphaLevel);
+        }
+
+        private double getSquareSampleStandardDeviationOfX() {
+            return xValues.getStandardDeviation();
         }
 
         //true if null hypothesis rejected, false if cannot reject null hypothesis
