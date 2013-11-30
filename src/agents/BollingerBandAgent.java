@@ -18,7 +18,6 @@ public class BollingerBandAgent extends Agent {
     private ArrayList<String> stockSymbolsToTrade;
     private HashMap<String, Integer> numberOfShares;
     private HashMap<String, Double> lastValues;
-    private double initialWallet;
 
     private int movingAverageSampleSize;
     private int bandWidth;
@@ -27,24 +26,24 @@ public class BollingerBandAgent extends Agent {
 
     public BollingerBandAgent(double capital) {
         super(capital);
-        ArrayList<String> stockSymbolsToTrade = new ArrayList<String>()
-        {{
-        add("VZ");
-        add("KR");
-        add("BKW");
-        add("GOOG");
-        add("MSFT");
-        add("OLN");
-        add("BA");
-        add("TDC");
+        ArrayList<String> stockSymbolsToTrade = new ArrayList<String>() {{
+            add("TWTR");
+            add("VZ");
+            add("KR");
+            add("BKW");
+            add("GOOG");
+            add("MSFT");
+            add("OLN");
+            add("BA");
+            add("MSI");
+            add("TDC");
         }};
 
-        initValues(stockSymbolsToTrade, wallet, 40, 2);
+        initValues(stockSymbolsToTrade, 40, 2);
     }
 
-    private void initValues(ArrayList<String> stockSymbolsToTrade, double wallet, int movingAverageSampleSize, int bandWidth) {
+    private void initValues(ArrayList<String> stockSymbolsToTrade, int movingAverageSampleSize, int bandWidth) {
         this.stockSymbolsToTrade = stockSymbolsToTrade;
-        this.wallet = wallet;
         this.movingAverageSampleSize = movingAverageSampleSize;
         this.bandWidth = bandWidth;
         numberOfShares = new HashMap<String, Integer>(stockSymbolsToTrade.size());
@@ -57,26 +56,20 @@ public class BollingerBandAgent extends Agent {
             basicStatistics.put(stockSymbolsToTrade.get(i), new BasicStatistics(movingAverageSampleSize));
             numberOfShares.put(stockSymbolsToTrade.get(i), 0);
         }
-
-        this.initialWallet = wallet;
     }
 
     @Override
     public void trade(StockValue stockValue) {
         if (stockSymbolsToTrade.contains(stockValue.getSymbol())) {
-            //set last values
             lastValues.put(stockValue.getSymbol(), stockValue.getValue());
-            //initialize q with 1st movingAverageSampleSize stocks. Temporary until market method is created to do this.
             if (stockValueQueues.get(stockValue.getSymbol()).size() < movingAverageSampleSize) {
                 stockValueQueues.get(stockValue.getSymbol()).add(stockValue);
                 basicStatistics.get(stockValue.getSymbol()).add(stockValue.getValue());
-            }
-            else if (stockValueQueues.get(stockValue.getSymbol()).size() == movingAverageSampleSize) {
+            } else if (stockValueQueues.get(stockValue.getSymbol()).size() == movingAverageSampleSize) {
                 doTrade(stockValue);
                 refreshQAndStats(stockValue);
                 doTrade(stockValue);
-            }
-            else {
+            } else {
                 refreshQAndStats(stockValue);
                 doTrade(stockValue);
             }
@@ -102,7 +95,7 @@ public class BollingerBandAgent extends Agent {
         int portfolioWorth = 0;
 
         for (int i = 0; i < numberOfShares.size(); i++)
-            portfolioWorth +=  numberOfShares.get(stockSymbolsToTrade.get(i)) * lastValues.get(stockSymbolsToTrade.get(i));
+            portfolioWorth += numberOfShares.get(stockSymbolsToTrade.get(i)) * lastValues.get(stockSymbolsToTrade.get(i));
         return wallet + portfolioWorth;
     }
 
