@@ -1,5 +1,6 @@
 package YFQuerier;
 
+import java.sql.SQLException;
 import java.util.Timer;
 import java.util.concurrent.TimeUnit;
 
@@ -9,8 +10,7 @@ import java.util.concurrent.TimeUnit;
  * Time: 9:04 AM
  */
 public class YFMain {
-    public static void main(String[] args)
-    {
+    public static void main(String[] args) throws SQLException {
         String[] stocksToQuery;
 
         if (args.length > 0)
