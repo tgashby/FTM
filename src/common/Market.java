@@ -48,7 +48,12 @@ public class Market {
                 agents.get(i).trade(currentStockValue);
     }
 
-    public boolean hasNextStockValue() {
+    public void printResults() {
+        for (int i = 0; i < agents.size(); i++)
+            System.out.print(agents.get(i).getResults());
+    }
+
+    private boolean hasNextStockValue() {
         return stockNdx < stockValues.size();
     }
 }
