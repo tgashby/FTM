@@ -1,64 +1,42 @@
-package common; /**
- * This is our basic stock value class.
- *
- * FYI tag is a horrible horrible person
- */
+package common;
 
-import java.sql.Time;
+import org.apache.commons.lang.StringEscapeUtils;
+
 import java.sql.Date;
+import java.sql.Time;
 
 public class StockValue {
-   protected String symbol;
-   protected String name;
-   protected Date date;
-   protected Time time;
-   protected double value;
+    private String symbol;
+    private String name;
+    private Date date;
+    private Time time;
+    private double value;
 
-   public StockValue(String s, String n, Date d, Time t, double v) {
-      symbol = s;
-      name = n;
-      date = d;
-      time = t;
-      value = v;
-   }
+    public StockValue(String symbol, String name, Date date, Time time, double value) {
+        this.symbol = StringEscapeUtils.escapeSql(symbol);
+        this.name = StringEscapeUtils.escapeSql(name);
+        this.date = date;
+        this.time = time;
+        this.value = value;
+    }
 
-   public double getValue() {
-      return value;
-   }
+    public String getSymbol() {
+        return symbol;
+    }
 
-   void setValue(Double v) {
-      value = v;
-   }
+    public String getName() {
+        return name;
+    }
 
-   public String getSymbol() {
-      return symbol;
-   }
+    public Date getDate() {
+        return date;
+    }
 
-   void setSymbol(String s) {
-      symbol = s;
-   }
+    public Time getTime() {
+        return time;
+    }
 
-   public String getName() {
-      return name;
-   }
-
-   void setName(String n) {
-      name = n;
-   }
-
-   public Date getDate() {
-      return date;
-   }
-
-   void setDate(Date d) {
-      date = d;
-   }
-
-   public Time getTime() {
-      return time;
-   }
-
-   void setTime(Time t) {
-      time = t;
-   }
+    public double getValue() {
+        return value;
+    }
 }
