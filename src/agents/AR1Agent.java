@@ -18,7 +18,7 @@ public class AR1Agent {
     int sampleSize;
     double alphaLevel;
     ArrayList<Stock> stocks = new ArrayList<Stock>(1000);
-    EnhancedSimpleRegression simpleRegression = new EnhancedSimpleRegression();
+    EnhancedSimpleRegression enhancedSimpleRegression = new EnhancedSimpleRegression();
 
     public AR1Agent() {
         sampleSize = 50;
@@ -32,42 +32,50 @@ public class AR1Agent {
 
     public void trade(Stock stock) {
         stocks.add(stock);
-        simpleRegression.addData(stocks.size(), stock.getValue());
+        enhancedSimpleRegression.addData(stocks.size(), stock.getValue());
 
         if (stocks.size() < 40)
             return;
 
-        fixIndependenceAssumption();
-        if (simpleRegression.testForLinearity(alphaLevel) && simpleRegression.testForNormality(alphaLevel) &&
-                simpleRegression.testForEqualVariances(alphaLevel)) {
-            RegressionResults results = simpleRegression.regress();
-            simpleRegression.getSignificance();
-            //if time is a significant predictor, then construct a PI for the next time period ahead.
-            //if PI bounds are both above or below current stock price, then execute trade
+        try {
+            fixIndependenceAssumption();
+            if (enhancedSimpleRegression.testForLinearity(alphaLevel) && enhancedSimpleRegression.testForNormality(alphaLevel) &&
+                    enhancedSimpleRegression.testForEqualVariances(alphaLevel)) {
+                RegressionResults results = enhancedSimpleRegression.regress();
+                enhancedSimpleRegression.getSignificance();
+                //if time is a significant predictor, then construct a PI for the next time period ahead.
+                //if PI bounds are both above or below current stock price, then execute trade
+            }
+        }
+        catch (UnconclusiveTestException e) {
+            System.out.println("Test unconclusive at stock # " + stocks.size() + " for " + stock.getName());
         }
     }
 
-    private void fixIndependenceAssumption() {
-        double durbinWatsonTestStatistic = calculateDurbinWatsonTestStatistic();
-        //get p-value from looking at lower & upper Durbin-Watson bounds. D < dL -> reject; D > dU -> fail to reject;
-        boolean rejectNullHypothesis = testForAutocorrelation(durbinWatsonTestStatistic, 5);  //stat, degrees of freedom
+    private void fixIndependenceAssumption() throws UnconclusiveTestException {
+        double durbinWatsonTestStatistic = enhancedSimpleRegression.getDurbinWatsonStatistic();
+        boolean rejectNullHypothesis = testForAutocorrelation(durbinWatsonTestStatistic);
         //if we fail to reject, good to forecast
         if (rejectNullHypothesis) {
             //fix autocorrelation (estimate ro or assume ro is 1) and check for under or over autocorrelation
             //if still autocorrelated, move on
         }
+
     }
 
-    private double calculateDurbinWatsonTestStatistic() {
-        //get residuals
-        //calc a sum: for (int t = 2; t < residuals.length; residuals++) { sum += residuals[t] - residuals[t - 1]; }
-        //divide by SSE
+    private boolean testForAutocorrelation(double durbinWatsonTestStatistic) throws UnconclusiveTestException {
+        //look at lower & upper Durbin-Watson bounds. D < dL -> reject; D > dU -> fail to reject;   //df
+        double lowerBound = 0;
+        double upperBound = 0;
 
-        return 0;
-    }
-
-    private boolean testForAutocorrelation(double durbinWatsonTestStatistic, int n) {
-        return false;
+        if (durbinWatsonTestStatistic < lowerBound)
+            return true;
+        else if (durbinWatsonTestStatistic > upperBound) {
+            return false;
+        }
+        else {
+            throw new UnconclusiveTestException();
+        }
     }
 
     private class EnhancedSimpleRegression extends SimpleRegression {
@@ -133,4 +141,6 @@ public class AR1Agent {
             return false;
         }
     }
+
+    private class UnconclusiveTestException extends Exception {}
 }
