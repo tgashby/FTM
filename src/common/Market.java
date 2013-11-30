@@ -44,9 +44,8 @@ public class Market {
         while (stockValueIterator.hasNext()) {
             Stock currentStock = stockValueIterator.next();
 
-            for (int i = 0; i < agents.size(); i++) {
+            for (int i = 0; i < agents.size(); i++)
                 agents.get(i).trade(currentStock);
-            }
         }
     }
 
