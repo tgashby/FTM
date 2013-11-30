@@ -24,7 +24,7 @@ public class BollingerBandAgent extends Agent {
 
     public BollingerBandAgent(double capital) {
         super(capital);
-        ArrayList<String> stockSymbolsToTrade = new ArrayList<String>() {{
+        stockSymbolsToTrade = new ArrayList<String>() {{
             add("TWTR");
             add("VZ");
             add("KR");
