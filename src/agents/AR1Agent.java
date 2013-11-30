@@ -8,6 +8,7 @@ import org.apache.commons.math3.stat.regression.SimpleRegression;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * User: allen
@@ -15,40 +16,55 @@ import java.util.ArrayList;
  * Time: 1:45 PM
  */
 //TODO: filter stocks
-public class AR1Agent extends Agent {
-    int sampleSize;
-    double alphaLevel;
-    ArrayList<Stock> stocks = new ArrayList<Stock>(1000);
-    EnhancedSimpleRegression enhancedSimpleRegression = new EnhancedSimpleRegression();
+public class AR1Agent extends MultipleStockTraderAgent {
+    private int sampleSize;
+    private double alphaLevel;
+    private HashMap<String, EnhancedSimpleRegression> enhancedSimpleRegressions = new HashMap<String, EnhancedSimpleRegression>();
+    private HashMap<String, ArrayList<Stock>> stockLists = new HashMap<String, ArrayList<Stock>>();
 
     public AR1Agent(double capital) {
         super(capital);
         sampleSize = 50;
         alphaLevel = 0.10;
+
+        for (int i = 0; i < stockSymbolsToTrade.size(); i++) {
+            enhancedSimpleRegressions.put(stockSymbolsToTrade.get(i), new EnhancedSimpleRegression());
+            stockLists.put(stockSymbolsToTrade.get(i), new ArrayList<Stock>(100));
+        }
     }
 
+    //TODO: save current hash map value in cur variable to clean up code
     @Override
     public void trade(Stock stock) {
-        stocks.add(stock);
-        enhancedSimpleRegression.addData(stocks.size(), stock.getValue());
+        if (stockSymbolsToTrade.contains(stock.getSymbol())) {
+            //update last values to calculate final net worth later
+            lastValues.put(stock.getSymbol(), stock.getValue());
+            //add stock to right stock list
+            stockLists.get(stock.getSymbol()).add(stock);
 
-        if (stocks.size() < sampleSize)
-            return;
+            ArrayList<Stock> currentStockValues = stockLists.get(stock.getSymbol());
+            EnhancedSimpleRegression currentRegression = enhancedSimpleRegressions.get(stock.getSymbol());
 
-        try {
-            fixIndependenceAssumption();
-        }
-        catch (UnconclusiveTestException e) {
-            System.out.println("Test unconclusive at stock # " + stocks.size() + " for " + stock.getName());
-            return;
-        }
+            currentRegression.addData(stock.getValue());
 
-        if (enhancedSimpleRegression.testForLinearity(alphaLevel) && enhancedSimpleRegression.testForNormality(alphaLevel) &&
-                enhancedSimpleRegression.testForEqualVariances(alphaLevel)) {
-            RegressionResults results = enhancedSimpleRegression.regress();
-            enhancedSimpleRegression.getSignificance();
-            //if time is a significant predictor, then construct a PI for the next time period ahead.
-            //if PI bounds are both above or below current stock price, then execute trade
+            if (currentStockValues.size() >= sampleSize) {
+                try {
+                    fixIndependenceAssumption(currentRegression);
+                }
+                catch (UnconclusiveTestException e) {
+                    System.out.println("Test unconclusive at stock # " + currentStockValues.size() + " for " + stock.getName());
+                    return;
+                }
+
+                if (currentRegression.testForLinearity(alphaLevel) &&
+                        currentRegression.testForNormality(alphaLevel) &&
+                        currentRegression.testForEqualVariances(alphaLevel)) {
+                    RegressionResults results = currentRegression.regress();
+                    currentRegression.getSignificance();
+                    //if time is a significant predictor, then construct a PI for the next time period ahead.
+                    //if PI bounds are both above or below current stock price, then execute trade
+                }
+            }
         }
     }
 
@@ -67,8 +83,8 @@ public class AR1Agent extends Agent {
         return 0;
     }
 
-    private void fixIndependenceAssumption() throws UnconclusiveTestException {
-        double durbinWatsonTestStatistic = enhancedSimpleRegression.getDurbinWatsonStatistic();
+    private void fixIndependenceAssumption(EnhancedSimpleRegression currentRegression) throws UnconclusiveTestException {
+        double durbinWatsonTestStatistic = currentRegression.getDurbinWatsonStatistic();
         boolean rejectNullHypothesis = testForAutocorrelation(durbinWatsonTestStatistic);
         //if we fail to reject, good to forecast
         if (rejectNullHypothesis) {
@@ -94,8 +110,13 @@ public class AR1Agent extends Agent {
     }
 
     private class EnhancedSimpleRegression extends SimpleRegression {
-        ArrayList<Double> residuals = new ArrayList<Double>(100);
-        SummaryStatistics xValues = new SummaryStatistics();
+        private int timeCounter_x = 0;
+        private ArrayList<Double> residuals = new ArrayList<Double>(100);
+        private SummaryStatistics xValues = new SummaryStatistics();
+
+        public void addData(final double y) {
+            addData(timeCounter_x++, y);
+        }
 
         @Override
         public void addData(final double x, final double y) {
