@@ -1,5 +1,7 @@
 package common;
 
+import java.sql.Date;
+import java.sql.SQLException;
 import java.util.ArrayList;
 
 /**
@@ -8,29 +10,41 @@ import java.util.ArrayList;
  * Time: 6:47 AM
  */
 public class Market {
-    private ArrayList<StockValue> stocks;
+    private ArrayList<Stock> stocks;
     private int stockNdx;
 
-    public Market() {
-        DatabaseConnection dbCon = new DatabaseConnection();
+    public Market(Date date) {
+        DatabaseConnection databaseConnection = new DatabaseConnection();
 
-        dbCon.connect();
-        stocks = dbCon.getAllStocks();
-        dbCon.disconnect();
+        databaseConnection.connect();
+        try {
+            stocks = databaseConnection.getStocksByDay(date);
+        } catch (SQLException e) {
+             throw new RuntimeException(e);
+        }
+        databaseConnection.disconnect();
 
         stockNdx = 0;
     }
 
-    public StockValue getNextValue()
+    public Stock getNextValue()
     {
-        StockValue toReturn = null;
+        Stock toReturn = null;
 
-        if (stockNdx < stocks.size())
+        if (hasNextValue())
         {
             toReturn = stocks.get(stockNdx);
             stockNdx++;
         }
+        else
+        {
+            throw new RuntimeException("No more stock values!");
+        }
 
         return toReturn;
+    }
+
+    public boolean hasNextValue() {
+        return stockNdx < stocks.size();
     }
 }

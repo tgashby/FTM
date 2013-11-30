@@ -1,7 +1,7 @@
 package YFQuerier;
 
 import common.DatabaseConnection;
-import common.StockValue;
+import common.Stock;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -10,9 +10,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.sql.Date;
+import java.sql.SQLException;
 import java.sql.Time;
-import java.util.Calendar;
-import java.util.TimeZone;
 import java.util.TimerTask;
 
 /**
@@ -71,87 +70,55 @@ public class YFQuerier extends TimerTask {
         urlOptions += "&f=" + options;
 
         dbCon = new DatabaseConnection();
-        dbCon.connect();
+        try {
+            dbCon.connect();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void run() {
-        Calendar cal = Calendar.getInstance();
-        cal.setTimeZone(TimeZone.getTimeZone("EST"));
 
-        Calendar exchangeOpen = Calendar.getInstance();
-        exchangeOpen.clear();
-        exchangeOpen.setTimeZone(TimeZone.getTimeZone("EST"));
-        exchangeOpen.set(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH), 9, 30);
+        try {
+            URL yahooFinance = new URL("http://finance.yahoo.com/d/quotes.csv?s=" + urlOptions);
+            URLConnection yc = yahooFinance.openConnection();
 
-        Calendar exchangeClose = Calendar.getInstance();
-        exchangeClose.clear();
-        exchangeClose.setTimeZone(TimeZone.getTimeZone("EST"));
-        exchangeClose.set(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH), 16, 0);
+            BufferedReader in = new BufferedReader(new InputStreamReader(yc.getInputStream()));
 
-        System.out.println("\nBeginning Stock Query " + cal.getTime());
+            String inputLine = in.readLine();
 
-        if (cal.after(exchangeOpen) && cal.before(exchangeClose) &&
-                cal.get(Calendar.DAY_OF_WEEK_IN_MONTH) != Calendar.SATURDAY &&
-                cal.get(Calendar.DAY_OF_WEEK_IN_MONTH) != Calendar.SUNDAY)
-        {
-            try {
-                System.out.println("Attempting to add the stock information to the DB");
+            String[] stockParts = inputLine.split(",");
 
-                URL yahooFinance = new URL("http://finance.yahoo.com/d/quotes.csv?s=" + urlOptions);
-                URLConnection yc = yahooFinance.openConnection();
+            for (int i = 0; i < stockParts.length; i++)
+                stockParts[i] = stockParts[i].replaceAll("\"", "");
 
-                BufferedReader in = new BufferedReader(new InputStreamReader(yc.getInputStream()));
+            Stock stock = new Stock(stockParts[0], stockParts[1], new Date(new java.util.Date().getTime()),
+             new Time(System.currentTimeMillis()), new Double(stockParts[2]));
 
-                String inputLine;
-                while ((inputLine = in.readLine()) != null)
-                {
-                    String[] stockParts = inputLine.split(",");
+            dbCon.insertStock(stock);
 
-                    for (int i = 0; i < stockParts.length; i++)
-                        stockParts[i] = stockParts[i].replaceAll("\"", "");
-
-                    StockValue stock = new StockValue(stockParts[0], stockParts[1], new Date(new java.util.Date().getTime()),
-                            new Time(System.currentTimeMillis()), new Double(stockParts[2]));
-
-                    dbCon.insertStock(stock);
-                    System.out.println(stockParts[0] + " added");
-                }
-
-                System.out.println("All Stocks Added");
-
-                in.close();
-            }
-            catch (MalformedURLException urlException)
-            {
-                urlException.printStackTrace();
-            }
-            catch (IOException ioException)
-            {
-                ioException.printStackTrace();
-            }
+            in.close();
         }
-        else
+        catch (MalformedURLException urlException)
         {
-            if (!cal.after(exchangeOpen))
-            {
-                System.out.println("No Transaction: Before market open (" + exchangeOpen.getTime() + ")");
-            }
-            else if (!cal.before(exchangeClose))
-            {
-                System.out.println("No Transaction: After market close (" + exchangeClose.getTime() + ")");
-            }
-            else
-            {
-                System.out.println("No Transaction: It's the weekend");
-            }
+            urlException.printStackTrace();
         }
-
-        System.out.println("End Stock Query");
+        catch (IOException ioException)
+        {
+            ioException.printStackTrace();
+        }
+        catch (SQLException sqlException) {
+            sqlException.printStackTrace();
+        }
     }
 
     public void disconnect()
     {
-        dbCon.disconnect();
+        try {
+            dbCon.disconnect();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }

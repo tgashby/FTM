@@ -1,50 +1,26 @@
 package agents;
 
-import common.Market;
-import common.StockValue;
+import java.util.ArrayList;
 
-/**
- * User: Tag
- * Date: 10/31/13
- * Time: 7:00 AM
- */
 public class AgentMain {
     public static void main(String[] args) {
-        Market market = new Market();
-        StockValue stock;
-        double wallet = 500.00;
-        double lastValue = 0.00;
-        double curValue = 0.00;
-        int numShares = 0;
+        ArrayList<String> valuesToTrade = new ArrayList<String>(10);
+        valuesToTrade.add("VZ");
+        valuesToTrade.add("KR");
+        valuesToTrade.add("BKW");
+        valuesToTrade.add("GOOG");
+        valuesToTrade.add("MSFT");
+        valuesToTrade.add("OLN");
+        valuesToTrade.add("BA");
+        valuesToTrade.add("TDC");
 
-        while ((stock = market.getNextValue()) != null && wallet > 0) {
-            lastValue = curValue;
-            curValue = stock.getValue();
+        //20 and 2 are default values
+        BollingerBandAgent bollingerBandAgent = new BollingerBandAgent(valuesToTrade, 50000, 40, 2);
 
-            if (lastValue > curValue) {
-                //price dropped, buy 1 share
-                if (wallet > curValue) {
-                    wallet -= curValue;
-                    numShares++;
-                    System.out.println("buying a share at $" + curValue);
-                }
-            }
-            else if (lastValue < curValue) {
-                //price rose, sell 1 share
-                if (numShares > 0) {
-                    numShares--;
-                    wallet += curValue;
-                    System.out.println("selling a share at $" + curValue);
-                }
-            }
-        }
-
-        System.out.println();
-        System.out.printf("Final wallet is $%.2f\n", wallet);
-        System.out.println("Portfolio has " + numShares + " shares.");
-        System.out.println("Portfolio is worth $" + numShares * curValue);
-        System.out.println();
-        double netWorth = wallet + numShares * curValue;
-        System.out.printf("Net worth is $%.2f\n", netWorth);
+        bollingerBandAgent.startTrading();
+        System.out.printf("Final wallet is $%.2f\n", bollingerBandAgent.getFinalWallet());
+        System.out.println("Portfolio has " + bollingerBandAgent.getFinalStockCounts() + " shares.");
+        bollingerBandAgent.printStockNameAndFrequencyOutput();
+        System.out.printf("Net worth is $%.2f\n", bollingerBandAgent.getNetWorth());
     }
 }

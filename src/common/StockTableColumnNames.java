@@ -3,7 +3,7 @@ package common;
 /**
  * Created by allen on 10/30/13
  */
-public enum StockColumnNames {
+public enum StockTableColumnNames {
     SYMBOL("symbol"),
     NAME("name"),
     DAY("day"),
@@ -13,7 +13,7 @@ public enum StockColumnNames {
     /**
      * @param text
      */
-    private StockColumnNames(final String text) {
+    private StockTableColumnNames(final String text) {
         this.text = text;
     }
 
