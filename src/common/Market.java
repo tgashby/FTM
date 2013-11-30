@@ -1,11 +1,12 @@
 package common;
 
-import agents.AgentInterface;
+import agents.Agent;
 import agents.BollingerBandAgent;
 
 import java.sql.Date;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 /**
  * User: Tag
@@ -14,12 +15,9 @@ import java.util.ArrayList;
  */
 public class Market {
     private ArrayList<StockValue> stockValues;
-    private int stockNdx;
-    /**
-     * Use this to select different days from today in the getStocksByDay method
-     */
     private final int millisecondsInADay = 86400000;
-    private ArrayList<AgentInterface> agents;
+    private ArrayList<Agent> agents;
+    private int walletInUSDollars = 5000;
 
     public Market() throws SQLException {
         DatabaseConnection databaseConnection = new DatabaseConnection();
@@ -34,26 +32,26 @@ public class Market {
          *
          * Add an agent to the list so it gets invoked.
          */
-        agents = new ArrayList<AgentInterface>()
+        agents = new ArrayList<Agent>()
         {{
-            add(new BollingerBandAgent());
+            add(new BollingerBandAgent(walletInUSDollars));
         }};
     }
 
     public void executeTrades() {
-        StockValue currentStockValue = stockValues.get(stockNdx++);
+        Iterator<StockValue> stockValueIterator = stockValues.iterator();
 
-        while (hasNextStockValue())
-            for (int i = 0; i < agents.size(); i++)
+        while (stockValueIterator.hasNext()) {
+            StockValue currentStockValue = stockValueIterator.next();
+
+            for (int i = 0; i < agents.size(); i++) {
                 agents.get(i).trade(currentStockValue);
+            }
+        }
     }
 
     public void printResults() {
         for (int i = 0; i < agents.size(); i++)
-            System.out.print(agents.get(i).getResults());
-    }
-
-    private boolean hasNextStockValue() {
-        return stockNdx < stockValues.size();
+            agents.get(i).printResults();
     }
 }
