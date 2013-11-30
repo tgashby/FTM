@@ -14,42 +14,57 @@ import java.util.ArrayList;
  * Date: 11/21/13
  * Time: 1:45 PM
  */
-public class AR1Agent {
+//TODO: filter stocks
+public class AR1Agent extends Agent {
     int sampleSize;
     double alphaLevel;
     ArrayList<Stock> stocks = new ArrayList<Stock>(1000);
     EnhancedSimpleRegression enhancedSimpleRegression = new EnhancedSimpleRegression();
 
-    public AR1Agent() {
+    public AR1Agent(double capital) {
+        super(capital);
         sampleSize = 50;
         alphaLevel = 0.10;
     }
 
-    public AR1Agent(int sampleSize, double alphaTestLevels) {
-        this.sampleSize = sampleSize;
-        this.alphaLevel = alphaTestLevels;
-    }
-
+    @Override
     public void trade(Stock stock) {
         stocks.add(stock);
         enhancedSimpleRegression.addData(stocks.size(), stock.getValue());
 
-        if (stocks.size() < 40)
+        if (stocks.size() < sampleSize)
             return;
 
         try {
             fixIndependenceAssumption();
-            if (enhancedSimpleRegression.testForLinearity(alphaLevel) && enhancedSimpleRegression.testForNormality(alphaLevel) &&
-                    enhancedSimpleRegression.testForEqualVariances(alphaLevel)) {
-                RegressionResults results = enhancedSimpleRegression.regress();
-                enhancedSimpleRegression.getSignificance();
-                //if time is a significant predictor, then construct a PI for the next time period ahead.
-                //if PI bounds are both above or below current stock price, then execute trade
-            }
         }
         catch (UnconclusiveTestException e) {
             System.out.println("Test unconclusive at stock # " + stocks.size() + " for " + stock.getName());
+            return;
         }
+
+        if (enhancedSimpleRegression.testForLinearity(alphaLevel) && enhancedSimpleRegression.testForNormality(alphaLevel) &&
+                enhancedSimpleRegression.testForEqualVariances(alphaLevel)) {
+            RegressionResults results = enhancedSimpleRegression.regress();
+            enhancedSimpleRegression.getSignificance();
+            //if time is a significant predictor, then construct a PI for the next time period ahead.
+            //if PI bounds are both above or below current stock price, then execute trade
+        }
+    }
+
+    @Override
+    public String getAgentName() {
+        return "First Order Autoregressive Model Agent";
+    }
+
+    @Override
+    public int getTotalNumberOfStocks() {
+        return 0;
+    }
+
+    @Override
+    public double getNetWorth() {
+        return 0;
     }
 
     private void fixIndependenceAssumption() throws UnconclusiveTestException {
@@ -114,14 +129,12 @@ public class AR1Agent {
         private double getXBar() throws IllegalAccessException, NoSuchFieldException {
             Field xBarField = this.getClass().getSuperclass().getDeclaredField("xbar");
             xBarField.setAccessible(true);
-            Double xBar = (Double) xBarField.get(this);
 
-            return xBar;
+            return (Double) xBarField.get(this);
         }
 
         private double getTCriticalValue(double degreesOfFreedom, double alphaLevel) {
-            TDistribution tDistribution = new TDistribution(degreesOfFreedom);
-            return tDistribution.cumulativeProbability(alphaLevel);
+            return new TDistribution(degreesOfFreedom).cumulativeProbability(alphaLevel);
         }
 
         private double getSquareSampleStandardDeviationOfX() {
