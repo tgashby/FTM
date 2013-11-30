@@ -49,16 +49,16 @@ public class DatabaseConnection {
         {
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery("select * from " + stockTableName +
-                    " where " + StockColumnNames.NAME + "=" + name + " and " +
-                                StockColumnNames.DAY + "=" + date + " and " +
-                                StockColumnNames.TIME + "=" + time);
+                    " where " + StockTableColumnNames.NAME + "=" + name + " and " +
+                                StockTableColumnNames.DAY + "=" + date + " and " +
+                                StockTableColumnNames.TIME + "=" + time);
 
             if (resultSet.next()) {
-                stockValue = new StockValue(resultSet.getString(StockColumnNames.SYMBOL.toString()),
-                        resultSet.getString(StockColumnNames.NAME.toString()),
-                        resultSet.getDate(StockColumnNames.DAY.toString()),
-                        resultSet.getTime(StockColumnNames.TIME.toString()),
-                        resultSet.getDouble(StockColumnNames.VALUE.toString()));
+                stockValue = new StockValue(resultSet.getString(StockTableColumnNames.SYMBOL.toString()),
+                        resultSet.getString(StockTableColumnNames.NAME.toString()),
+                        resultSet.getDate(StockTableColumnNames.DAY.toString()),
+                        resultSet.getTime(StockTableColumnNames.TIME.toString()),
+                        resultSet.getDouble(StockTableColumnNames.VALUE.toString()));
             }
             statement.close();
         }
@@ -88,11 +88,11 @@ public class DatabaseConnection {
             ResultSet resultSet = statement.executeQuery("select * from " + stockTableName);
 
             while(resultSet.next()) {
-                allStocks.add(new StockValue(resultSet.getString(StockColumnNames.SYMBOL.toString()),
-                        resultSet.getString(StockColumnNames.NAME.toString()),
-                        resultSet.getDate(StockColumnNames.DAY.toString()),
-                        resultSet.getTime(StockColumnNames.TIME.toString()),
-                        resultSet.getDouble(StockColumnNames.VALUE.toString())));
+                allStocks.add(new StockValue(resultSet.getString(StockTableColumnNames.SYMBOL.toString()),
+                        resultSet.getString(StockTableColumnNames.NAME.toString()),
+                        resultSet.getDate(StockTableColumnNames.DAY.toString()),
+                        resultSet.getTime(StockTableColumnNames.TIME.toString()),
+                        resultSet.getDouble(StockTableColumnNames.VALUE.toString())));
             }
 
             statement.close();

@@ -10,7 +10,7 @@ import java.util.ArrayList;
  * Time: 6:47 AM
  */
 public class Market {
-    private ArrayList<Stock> stocks;
+    private ArrayList<StockValue> stockValues;
     private int stockNdx;
 
     public Market(Date date) {
@@ -18,7 +18,7 @@ public class Market {
 
         databaseConnection.connect();
         try {
-            stocks = databaseConnection.getStocksByDay(date);
+            stockValues = databaseConnection.getStocksByDay(date);
         } catch (SQLException e) {
              throw new RuntimeException(e);
         }
@@ -27,13 +27,13 @@ public class Market {
         stockNdx = 0;
     }
 
-    public Stock getNextValue()
+    public StockValue getNextValue()
     {
-        Stock toReturn = null;
+        StockValue toReturn = null;
 
         if (hasNextValue())
         {
-            toReturn = stocks.get(stockNdx);
+            toReturn = stockValues.get(stockNdx);
             stockNdx++;
         }
         else
@@ -45,6 +45,6 @@ public class Market {
     }
 
     public boolean hasNextValue() {
-        return stockNdx < stocks.size();
+        return stockNdx < stockValues.size();
     }
 }

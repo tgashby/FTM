@@ -1,7 +1,7 @@
 package agents;
 
 import common.Market;
-import common.Stock;
+import common.StockValue;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,7 +16,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 public class BollingerBandAgent {
     private final int millisecondsInADay = 86400000;
     private Market market = new Market(new java.sql.Date(System.currentTimeMillis() - millisecondsInADay));
-    private Stock stock;
+    private StockValue stockValue;
     private ArrayList<String> stockSymbolsToTrade;
     private double wallet;
     private HashMap<String, Integer> numberOfShares;
@@ -24,7 +24,7 @@ public class BollingerBandAgent {
 
     private int movingAverageSampleSize;
     private int bandWidth;
-    private HashMap<String, ArrayBlockingQueue<Stock>> stockValueQueues;
+    private HashMap<String, ArrayBlockingQueue<StockValue>> stockValueQueues;
     private HashMap<String, BasicStatistics> basicStatistics;
 
     public BollingerBandAgent(ArrayList<String> stockSymbolsToTrade, int wallet, int movingAverageSampleSize, int bandWidth) {
@@ -34,11 +34,11 @@ public class BollingerBandAgent {
         this.bandWidth = bandWidth;
         numberOfShares = new HashMap<String, Integer>(stockSymbolsToTrade.size());
         lastValues = new HashMap<String, Double>(stockSymbolsToTrade.size());
-        stockValueQueues = new HashMap<String, ArrayBlockingQueue<Stock>>(stockSymbolsToTrade.size());
+        stockValueQueues = new HashMap<String, ArrayBlockingQueue<StockValue>>(stockSymbolsToTrade.size());
         basicStatistics = new HashMap<String, BasicStatistics>(stockSymbolsToTrade.size());
 
         for (int i = 0; i < stockSymbolsToTrade.size(); i++) {
-            stockValueQueues.put(stockSymbolsToTrade.get(i), new ArrayBlockingQueue<Stock>(movingAverageSampleSize));
+            stockValueQueues.put(stockSymbolsToTrade.get(i), new ArrayBlockingQueue<StockValue>(movingAverageSampleSize));
             basicStatistics.put(stockSymbolsToTrade.get(i), new BasicStatistics(movingAverageSampleSize));
             numberOfShares.put(stockSymbolsToTrade.get(i), 0);
         }
@@ -48,55 +48,55 @@ public class BollingerBandAgent {
 
     public void startTrading() {
         while (market.hasNextValue() && wallet >= 0) {
-            stock = market.getNextValue();
+            stockValue = market.getNextValue();
             //only trade the stocks specified
-            if (!stockSymbolsToTrade.contains(stock.getSymbol()))
+            if (!stockSymbolsToTrade.contains(stockValue.getSymbol()))
                 continue;
             //set last values
-            lastValues.put(stock.getSymbol(), stock.getValue());
+            lastValues.put(stockValue.getSymbol(), stockValue.getValue());
             //initialize q with 1st movingAverageSampleSize stocks. Temporary until market method is created to do this.
-            if (stockValueQueues.get(stock.getSymbol()).size() < movingAverageSampleSize) {
-                stockValueQueues.get(stock.getSymbol()).add(stock);
-                basicStatistics.get(stock.getSymbol()).add(stock.getValue());
+            if (stockValueQueues.get(stockValue.getSymbol()).size() < movingAverageSampleSize) {
+                stockValueQueues.get(stockValue.getSymbol()).add(stockValue);
+                basicStatistics.get(stockValue.getSymbol()).add(stockValue.getValue());
             }
-            else if (stockValueQueues.get(stock.getSymbol()).size() == movingAverageSampleSize) {
-                doTrade(stock);
-                refreshQAndStats(stock);
-                doTrade(stock);
+            else if (stockValueQueues.get(stockValue.getSymbol()).size() == movingAverageSampleSize) {
+                doTrade(stockValue);
+                refreshQAndStats(stockValue);
+                doTrade(stockValue);
             }
             else {
-                refreshQAndStats(stock);
-                doTrade(stock);
+                refreshQAndStats(stockValue);
+                doTrade(stockValue);
             }
         }
     }
 
-    private void doTrade(Stock stock) {
-        double mean = basicStatistics.get(stock.getSymbol()).getMean();
-        double standardDeviation = basicStatistics.get(stock.getSymbol()).getStandardDeviation();
+    private void doTrade(StockValue stockValue) {
+        double mean = basicStatistics.get(stockValue.getSymbol()).getMean();
+        double standardDeviation = basicStatistics.get(stockValue.getSymbol()).getStandardDeviation();
         double lowerBound = mean - standardDeviation * bandWidth;
         double upperBound = mean + standardDeviation * bandWidth;
-        int currentNumberOfShares = numberOfShares.get(stock.getSymbol());
+        int currentNumberOfShares = numberOfShares.get(stockValue.getSymbol());
 
         //undervalued
-        if (stock.getValue() < lowerBound) {
+        if (stockValue.getValue() < lowerBound) {
             //buy
-            if (wallet - stock.getValue() > 0) {
-                wallet -= stock.getValue();
-                numberOfShares.put(stock.getSymbol(), currentNumberOfShares + 1);
+            if (wallet - stockValue.getValue() > 0) {
+                wallet -= stockValue.getValue();
+                numberOfShares.put(stockValue.getSymbol(), currentNumberOfShares + 1);
             }
         }
         //overvalued
-        else if (stock.getValue() > upperBound) {
+        else if (stockValue.getValue() > upperBound) {
             //sell
             if (currentNumberOfShares > 0) {
-                numberOfShares.put(stock.getSymbol(), currentNumberOfShares - 1);
-                wallet += stock.getValue();
+                numberOfShares.put(stockValue.getSymbol(), currentNumberOfShares - 1);
+                wallet += stockValue.getValue();
             }
         }
     }
 
-    private void refreshQAndStats(Stock newValue) {
+    private void refreshQAndStats(StockValue newValue) {
         stockValueQueues.get(newValue.getSymbol()).remove();
         stockValueQueues.get(newValue.getSymbol()).add(newValue);
         basicStatistics.get(newValue.getSymbol()).removeOldestValue();

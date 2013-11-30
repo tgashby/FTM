@@ -1,7 +1,7 @@
 package YFQuerier;
 
 import common.DatabaseConnection;
-import common.Stock;
+import common.StockValue;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -70,11 +70,7 @@ public class YFQuerier extends TimerTask {
         urlOptions += "&f=" + options;
 
         dbCon = new DatabaseConnection();
-        try {
-            dbCon.connect();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        dbCon.connect();
     }
 
     @Override
@@ -93,10 +89,10 @@ public class YFQuerier extends TimerTask {
             for (int i = 0; i < stockParts.length; i++)
                 stockParts[i] = stockParts[i].replaceAll("\"", "");
 
-            Stock stock = new Stock(stockParts[0], stockParts[1], new Date(new java.util.Date().getTime()),
+            StockValue stockValue = new StockValue(stockParts[0], stockParts[1], new Date(new java.util.Date().getTime()),
              new Time(System.currentTimeMillis()), new Double(stockParts[2]));
 
-            dbCon.insertStock(stock);
+            dbCon.insertStock(stockValue);
 
             in.close();
         }
@@ -108,17 +104,10 @@ public class YFQuerier extends TimerTask {
         {
             ioException.printStackTrace();
         }
-        catch (SQLException sqlException) {
-            sqlException.printStackTrace();
-        }
     }
 
     public void disconnect()
     {
-        try {
-            dbCon.disconnect();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        dbCon.disconnect();
     }
 }
