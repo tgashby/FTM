@@ -12,11 +12,7 @@ import java.util.concurrent.ArrayBlockingQueue;
  * Date: 11/5/13
  * Time: 9:45 PM
  */
-public class BollingerBandAgent extends Agent {
-    private ArrayList<String> stockSymbolsToTrade;
-    private HashMap<String, Integer> numberOfShares;
-    private HashMap<String, Double> lastValues;
-
+public class BollingerBandAgent extends MultipleStockTraderAgent {
     private int movingAverageSampleSize;
     private int bandWidth;
     private HashMap<String, ArrayBlockingQueue<Stock>> stockValueQueues;
@@ -24,7 +20,7 @@ public class BollingerBandAgent extends Agent {
 
     public BollingerBandAgent(double capital) {
         super(capital);
-        ArrayList<String> stockSymbolsToTrade = new ArrayList<String>() {{
+        stockSymbolsToTrade = new ArrayList<String>() {{
             add("TWTR");
             add("VZ");
             add("KR");
@@ -37,22 +33,18 @@ public class BollingerBandAgent extends Agent {
             add("TDC");
         }};
 
-        initValues(stockSymbolsToTrade, 40, 2);
+        initValues(40, 2);
     }
 
-    private void initValues(ArrayList<String> stockSymbolsToTrade, int movingAverageSampleSize, int bandWidth) {
-        this.stockSymbolsToTrade = stockSymbolsToTrade;
+    private void initValues(int movingAverageSampleSize, int bandWidth) {
         this.movingAverageSampleSize = movingAverageSampleSize;
         this.bandWidth = bandWidth;
-        numberOfShares = new HashMap<String, Integer>(stockSymbolsToTrade.size());
-        lastValues = new HashMap<String, Double>(stockSymbolsToTrade.size());
         stockValueQueues = new HashMap<String, ArrayBlockingQueue<Stock>>(stockSymbolsToTrade.size());
         basicStatistics = new HashMap<String, BasicStatistics>(stockSymbolsToTrade.size());
 
         for (int i = 0; i < stockSymbolsToTrade.size(); i++) {
             stockValueQueues.put(stockSymbolsToTrade.get(i), new ArrayBlockingQueue<Stock>(movingAverageSampleSize));
             basicStatistics.put(stockSymbolsToTrade.get(i), new BasicStatistics(movingAverageSampleSize));
-            numberOfShares.put(stockSymbolsToTrade.get(i), 0);
         }
     }
 
