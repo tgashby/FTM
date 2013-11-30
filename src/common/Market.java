@@ -17,11 +17,7 @@ public class Market {
         DatabaseConnection databaseConnection = new DatabaseConnection();
 
         databaseConnection.connect();
-        try {
-            stockValues = databaseConnection.getStocksByDay(date);
-        } catch (SQLException e) {
-             throw new RuntimeException(e);
-        }
+        stockValues = databaseConnection.getStocksByDay(date);
         databaseConnection.disconnect();
 
         stockNdx = 0;
