@@ -2,7 +2,6 @@ package agents;
 
 import common.Stock;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -15,35 +14,22 @@ import java.util.concurrent.ArrayBlockingQueue;
 public class BollingerBandAgent extends MultipleStockTraderAgent {
     private int movingAverageSampleSize;
     private int bandWidth;
-    private HashMap<String, ArrayBlockingQueue<Stock>> stockValueQueues;
+    private HashMap<String, ArrayBlockingQueue<Stock>> stockQueues;
     private HashMap<String, BasicStatistics> basicStatistics;
 
     public BollingerBandAgent(double capital) {
         super(capital);
-        stockSymbolsToTrade = new ArrayList<String>() {{
-            add("TWTR");
-            add("VZ");
-            add("KR");
-            add("BKW");
-            add("GOOG");
-            add("MSFT");
-            add("OLN");
-            add("BA");
-            add("MSI");
-            add("TDC");
-        }};
-
         initValues(40, 2);
     }
 
     private void initValues(int movingAverageSampleSize, int bandWidth) {
         this.movingAverageSampleSize = movingAverageSampleSize;
         this.bandWidth = bandWidth;
-        stockValueQueues = new HashMap<String, ArrayBlockingQueue<Stock>>(stockSymbolsToTrade.size());
+        stockQueues = new HashMap<String, ArrayBlockingQueue<Stock>>(stockSymbolsToTrade.size());
         basicStatistics = new HashMap<String, BasicStatistics>(stockSymbolsToTrade.size());
 
         for (int i = 0; i < stockSymbolsToTrade.size(); i++) {
-            stockValueQueues.put(stockSymbolsToTrade.get(i), new ArrayBlockingQueue<Stock>(movingAverageSampleSize));
+            stockQueues.put(stockSymbolsToTrade.get(i), new ArrayBlockingQueue<Stock>(movingAverageSampleSize));
             basicStatistics.put(stockSymbolsToTrade.get(i), new BasicStatistics(movingAverageSampleSize));
         }
     }
@@ -52,10 +38,10 @@ public class BollingerBandAgent extends MultipleStockTraderAgent {
     public void trade(Stock stock) {
         if (stockSymbolsToTrade.contains(stock.getSymbol())) {
             lastValues.put(stock.getSymbol(), stock.getValue());
-            if (stockValueQueues.get(stock.getSymbol()).size() < movingAverageSampleSize) {
-                stockValueQueues.get(stock.getSymbol()).add(stock);
+            if (stockQueues.get(stock.getSymbol()).size() < movingAverageSampleSize) {
+                stockQueues.get(stock.getSymbol()).add(stock);
                 basicStatistics.get(stock.getSymbol()).add(stock.getValue());
-            } else if (stockValueQueues.get(stock.getSymbol()).size() == movingAverageSampleSize) {
+            } else if (stockQueues.get(stock.getSymbol()).size() == movingAverageSampleSize) {
                 doTrade(stock);
                 refreshQAndStats(stock);
                 doTrade(stock);
@@ -128,8 +114,8 @@ public class BollingerBandAgent extends MultipleStockTraderAgent {
     }
 
     private void refreshQAndStats(Stock newValue) {
-        stockValueQueues.get(newValue.getSymbol()).remove();
-        stockValueQueues.get(newValue.getSymbol()).add(newValue);
+        stockQueues.get(newValue.getSymbol()).remove();
+        stockQueues.get(newValue.getSymbol()).add(newValue);
         basicStatistics.get(newValue.getSymbol()).removeOldestValue();
         basicStatistics.get(newValue.getSymbol()).add(newValue.getValue());
     }
