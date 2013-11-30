@@ -1,11 +1,11 @@
 package agents;
 
-import common.EnhancedSimpleRegression;
 import common.Stock;
 import org.apache.commons.math3.stat.regression.RegressionResults;
+import org.apache.commons.math3.stat.regression.SimpleRegression;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.concurrent.ArrayBlockingQueue;
 
 /**
  * User: allen
@@ -61,5 +61,73 @@ public class AR1Agent {
 
     private boolean testForAutocorrelation(double durbinWatsonTestStatistic, int n) {
         return false;
+    }
+
+    private class EnhancedSimpleRegression extends SimpleRegression {
+        ArrayList<Double> residuals = new ArrayList<Double>(100);
+
+        @Override
+        public void addData(final double x, final double y) {
+            super.addData(x, y);
+            residuals.add(y - super.predict(x));
+        }
+
+        @Override
+        public void removeData(final double x, final double y) {
+            super.removeData(x, y);
+            residuals.remove(y - super.predict(x));
+        }
+
+        public double getDurbinWatsonStatistic() {
+            int durbinWatsonStatisticNumerator = 0;
+            for (int t = 2; t < residuals.size(); t++)
+                durbinWatsonStatisticNumerator += residuals.get(t) - residuals.get(t - 1);
+            return durbinWatsonStatisticNumerator / super.getSumSquaredErrors();
+        }
+
+        public double[][] getPredictionInterval(double x) {
+            double pointPrediction = super.predict(x);
+            double moe = getMarginOfError(x);
+            return new double[][] { { pointPrediction - moe }, { pointPrediction + moe } };
+        }
+
+        private double getMarginOfError(double x) {
+            double tCriticalValue = 0;
+            double residualStandardDeviation = super.getSumSquaredErrors() / (super.getN() - 2);
+            double standardizedSquareOfX = Math.pow(x - getXBar(), 2);
+            double degreesOfFreedom = super.getN() - 1;
+            double squareSampleStandardDeviationOfX = 0;
+
+            return tCriticalValue * residualStandardDeviation * Math.sqrt(1 + (1 / super.getN()) + (standardizedSquareOfX /
+                    (degreesOfFreedom * squareSampleStandardDeviationOfX)));
+        }
+
+        private double getXBar() {
+            Double xBar = null;
+            try {
+                Field xBarField = this.getClass().getSuperclass().getDeclaredField("xbar");
+                xBarField.setAccessible(true);
+                xBar = (Double) xBarField.get(this);
+            } catch (NoSuchFieldException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+
+            return xBar;
+        }
+
+        //true if null hypothesis rejected, false if cannot reject null hypothesis
+        public boolean testForLinearity(double alphaLevel) {
+            return false;
+        }
+
+        public boolean testForNormality(double alphaLevel) {
+            return false;
+        }
+
+        public boolean testForEqualVariances(double alphaLevel) {
+            return false;
+        }
     }
 }
