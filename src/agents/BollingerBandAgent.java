@@ -2,7 +2,6 @@ package agents;
 
 import common.StockValue;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -15,20 +14,19 @@ import java.util.concurrent.ArrayBlockingQueue;
  * Date: 11/5/13
  * Time: 9:45 PM
  */
-public class BollingerBandAgent implements AgentInterface {
-    private StockValue stockValue;
+public class BollingerBandAgent extends Agent {
     private ArrayList<String> stockSymbolsToTrade;
-    private double wallet;
     private HashMap<String, Integer> numberOfShares;
     private HashMap<String, Double> lastValues;
-    private double intiialWallet;
+    private double initialWallet;
 
     private int movingAverageSampleSize;
     private int bandWidth;
     private HashMap<String, ArrayBlockingQueue<StockValue>> stockValueQueues;
     private HashMap<String, BasicStatistics> basicStatistics;
 
-    public BollingerBandAgent() {
+    public BollingerBandAgent(double capital) {
+        super(capital);
         ArrayList<String> stockSymbolsToTrade = new ArrayList<String>()
         {{
         add("VZ");
@@ -41,14 +39,10 @@ public class BollingerBandAgent implements AgentInterface {
         add("TDC");
         }};
 
-        initValues(stockSymbolsToTrade, 50000, 40, 2);
+        initValues(stockSymbolsToTrade, wallet, 40, 2);
     }
 
-    public BollingerBandAgent(ArrayList<String> stockSymbolsToTrade, int wallet, int movingAverageSampleSize, int bandWidth) {
-        initValues(stockSymbolsToTrade, wallet, movingAverageSampleSize, bandWidth);
-    }
-
-    private void initValues(ArrayList<String> stockSymbolsToTrade, int wallet, int movingAverageSampleSize, int bandWidth) {
+    private void initValues(ArrayList<String> stockSymbolsToTrade, double wallet, int movingAverageSampleSize, int bandWidth) {
         this.stockSymbolsToTrade = stockSymbolsToTrade;
         this.wallet = wallet;
         this.movingAverageSampleSize = movingAverageSampleSize;
@@ -64,7 +58,7 @@ public class BollingerBandAgent implements AgentInterface {
             numberOfShares.put(stockSymbolsToTrade.get(i), 0);
         }
 
-        this.intiialWallet = wallet;
+        this.initialWallet = wallet;
     }
 
     @Override
@@ -90,26 +84,39 @@ public class BollingerBandAgent implements AgentInterface {
     }
 
     @Override
-    public String getResults() {
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        PrintStream printStream = new PrintStream(byteArrayOutputStream);
+    public String getAgentName() {
+        return "Bollinger Band Agent";
+    }
 
-        printStream.print("Initial wallet is $%.2f" + intiialWallet);
-        printStream.printf("Final wallet is $%.2f" + wallet);
-        printStream.print("Portfolio has " + getFinalStockCounts());
-        printStream.printf("Net worth is $%.2f", getNetWorth());
+    @Override
+    public int getTotalNumberOfStocks() {
+        int sum = 0;
 
+        for (int i = 0; i < numberOfShares.size(); i++)
+            sum += numberOfShares.get(stockSymbolsToTrade.get(i));
+        return sum;
+    }
+
+    @Override
+    public double getNetWorth() {
+        int portfolioWorth = 0;
+
+        for (int i = 0; i < numberOfShares.size(); i++)
+            portfolioWorth +=  numberOfShares.get(stockSymbolsToTrade.get(i)) * lastValues.get(stockSymbolsToTrade.get(i));
+        return wallet + portfolioWorth;
+    }
+
+    @Override
+    public void printResults() {
+        super.printResults();
         String leftAlignFormat = "| %-8s | %-9d |%n";
 
-        printStream.format("+----------+------------+%n");
-        printStream.printf("| Stock    | Frequency  |%n");
-        printStream.format("+----------+------------+%n");
-        for (int i = 0; i < stockSymbolsToTrade.size(); i++) {
-            printStream.format(leftAlignFormat, stockSymbolsToTrade.get(i), numberOfShares.get(stockSymbolsToTrade.get(i)));
-        }
-        printStream.format("+----------+------------+%n");
-
-        return byteArrayOutputStream.toString();
+        System.out.format("+----------+------------+%n");
+        System.out.printf("| Stock    | Frequency  |%n");
+        System.out.format("+----------+------------+%n");
+        for (int i = 0; i < stockSymbolsToTrade.size(); i++)
+            System.out.format(leftAlignFormat, stockSymbolsToTrade.get(i), numberOfShares.get(stockSymbolsToTrade.get(i)));
+        System.out.format("+----------+------------+%n");
     }
 
     private void doTrade(StockValue stockValue) {
@@ -143,24 +150,6 @@ public class BollingerBandAgent implements AgentInterface {
         basicStatistics.get(newValue.getSymbol()).removeOldestValue();
         basicStatistics.get(newValue.getSymbol()).add(newValue.getValue());
     }
-
-    private int getFinalStockCounts() {
-        int sum = 0;
-
-        for (int i = 0; i < numberOfShares.size(); i++)
-            sum += numberOfShares.get(stockSymbolsToTrade.get(i));
-        return sum;
-    }
-
-    private double getNetWorth() {
-        int portfolioWorth = 0;
-
-        for (int i = 0; i < numberOfShares.size(); i++) {
-           portfolioWorth +=  numberOfShares.get(stockSymbolsToTrade.get(i)) * lastValues.get(stockSymbolsToTrade.get(i));
-        }
-        return wallet + portfolioWorth;
-    }
-
 
     private class BasicStatistics {
         private ArrayBlockingQueue<Double> sample;

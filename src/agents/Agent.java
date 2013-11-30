@@ -1,80 +1,46 @@
+package agents;
+
+import common.StockValue;
+
 /**
  * Agent interfacce class. Please make your agent implement all of these
  * methods so that the market can do some comparisons between the different
  * agents!
  *
  * @author Robbie
+ *
+ * Fixed the agent abstract class up a bit. Removed trading managment for more flexability
+ * and made necessary methods abstract so the compiler forces them to be implemented.
+ *
+ * - Allen
  */
 
 public abstract class Agent {
-   /*Liquid assets of your agent*/
-   public double wallet = 0;
+    /*Liquid assets of your agent*/
+    protected double wallet = 0;
+    private double initialWallet;
 
-   /*Number of shares of stock it owns*/
-   public int numShares = 0;
+    /**
+     * Default constructor - be sure to call super() in your constructor.
+     */
+    public Agent(double initialCapital) {
+        wallet = initialWallet = initialCapital;
+    }
 
-   /*Most Recent Stock Value*/
-   public double lastValue;
+    public abstract void trade(StockValue stockValue);
+    public abstract String getAgentName();
+    public abstract int getTotalNumberOfStocks();
+    public abstract double getNetWorth();
 
-   /**
-    * Default constructor - be sure to call super() in your constructor.
-    */
-   public Agent(double initialCapital){
-      wallet = initialCapital;
-      numShares = 0;
-   }
+    public void printResults() {
+        System.out.println("Agent name: " + getAgentName());
+        System.out.printf("Initial wallet is $%.2f\n", initialWallet);
+        System.out.printf("Final wallet is $%.2f\n", wallet);
+        System.out.println("Portfolio has " + getTotalNumberOfStocks() + " stocks");
+        System.out.printf("Net worth is $%.2f\n", getNetWorth());
+    }
 
-   /**
-    * Market will call this once for each agent and your agent will be
-    * expected to do its reasoning with this next new value it is receiving
-    *
-    * override this method and call super(value); to make sure lastValue gets
-    *  set.
-    */
-   public void handleNextStockValue(double value){
-      lastValue = value;
-   }
-
-   /**
-    * Buy stock(s)
-    */
-   public void buyStock(){
-      if (wallet > lastValue) {
-         wallet -= lastValue;
-         numShares++;
-      }
-   }
-
-   public void buyStocks(int num) {
-      for(int i = 0; i < num; i ++)
-         buyStock();
-   }
-
-   /**
-    * Sell Stock(s)
-    */
-   public void sellStock(){
-      if (numShares > 0) {
-         wallet += lastValue;
-         numShares--;
-      }
-   }
-
-   public void sellStocks(int num) {
-      for (int i = 0; i < num; i++)
-         sellStock();
-   }
-
-
-   public int getShares(){
-      return numShares;
-   }
-
-   public double liquidAssets(){
-      return wallet;
-   }
-
-   public double netWorth(){
-      return wallet + (numShares * lastValue);
-   }
+    public double getWallet() {
+        return wallet;
+    }
 }
