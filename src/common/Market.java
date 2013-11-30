@@ -1,7 +1,7 @@
 package common;
 
-import agents.Agent;
 import agents.BollingerBandAgent;
+import agents.Agent;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
