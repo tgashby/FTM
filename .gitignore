@@ -28,6 +28,7 @@ nb-configuration.xml
 *.iml
 *.iws
 out/
+src/META-INF/
 
 # Mac
 .DS_Store
