@@ -3,40 +3,60 @@ package agents;
 import java.lang.Double;
 import java.util.LinkedList;
 
-public class TrendAgent {
+import common.Stock;
+
+public class TrendAgent extends Agent{
    private static int NUM_VALUES = 50;
-   private LinkedList<Double> values = new LinkedList<Double>();
-   private LinkedList<Double> stockProvider;
-   private int numStocks;
-   private double wallet;
-   private double lastValue;
    
-   public static void main(String [] args) {
-      TrendAgent tA = new TrendAgent();
-      tA.run();
+   private LinkedList<Double> values;
+   private int numStocks;
+   private double lastValue;
+   private double lastAverage;
+   private double thisAverage;
+   
+   public TrendAgent(double initialCapital){
+      super(initialCapital);
+      values = new LinkedList<Double>();
    }
    
-   public void run() {
-      double lastAverage;
-      double thisAverage;
-      
-      for (int i = 0; i < NUM_VALUES; i ++) {
-         values.addFirst(getNextStockValue());
+   public void trade(Stock stock){
+      lastValue = stock.getValue();
+   
+      //if we dont have 50 values yet just add them to the list
+      if (values.size() < NUM_VALUES) {
+         values.add(lastValue);
+         //If we finally have 50 values lets make it the last average
+         if (values.size() == NUM_VALUES) {
+            lastAverage = getAverage();
+         }
       }
-      
-      lastAverage = getAverage();
-      
-      while(stockProvider.size() > 0) {
+      //Actually make some decisions and look at the trend
+      else {
+         values.removeLast();
+         values.addFirst(lastValue);
          thisAverage = getAverage();
+         
          if (thisAverage > lastAverage) {
             buy();
          }
          else if (thisAverage < lastAverage) {
             sell();
          }
-         values.removeLast();
-         values.addFirst(getNextStockValue());
-      }   
+         
+         lastAverage = thisAverage;
+      }
+   }
+   
+   public String getAgentName(){
+      return "Trend Agent";
+   }
+   
+   public int getTotalNumberOfStocks(){
+      return numStocks;
+   }
+   
+   public double getNetWorth(){
+      return wallet + (numStocks*lastValue);
    }
    
    private void buy() {
@@ -61,15 +81,5 @@ public class TrendAgent {
       }
       
       return total / NUM_VALUES;
-   }
-   
-   private double getNextStockValue(){
-      if (stockProvider == null) {
-         stockProvider = new LinkedList<Double>();
-         //get the stock provider
-         //While there are stocks add them to the end of the stockProvider list
-      }
-      lastValue = stockProvider.getFirst();
-      return lastValue;
    }
 }
