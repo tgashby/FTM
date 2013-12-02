@@ -7,7 +7,7 @@ package test;
  */
 public class TestMain {
     public static void main(String[] args) {
-        DatabaseConnectionTest.run();
+//        DatabaseConnectionTest.run();
 
         // Add additional test suites here if you want
     }
