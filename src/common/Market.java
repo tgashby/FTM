@@ -1,6 +1,11 @@
 package common;
 
+import agents.Agent;
+import agents.BollingerBandAgent;
+
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 /**
  * User: Tag
@@ -8,29 +13,44 @@ import java.util.ArrayList;
  * Time: 6:47 AM
  */
 public class Market {
-    private ArrayList<StockValue> stocks;
-    private int stockNdx;
+    private ArrayList<Stock> stocks;
+    private final int millisecondsInADay = 86400000;
+    private ArrayList<Agent> agents;
+    private int walletInUSDollars = 5000;
 
-    public Market() {
-        DatabaseConnection dbCon = new DatabaseConnection();
+    public Market() throws SQLException {
+        DatabaseConnection databaseConnection = new DatabaseConnection();
 
-        dbCon.connect();
-        stocks = dbCon.getAllStocks();
-        dbCon.disconnect();
+        databaseConnection.connect();
+        //stocks = databaseConnection.getStocksByDay(new Date(System.currentTimeMillis()));
+        stocks = databaseConnection.getAllStocks();
+        databaseConnection.disconnect();
 
-        stockNdx = 0;
+        /**
+         * refer to here for an explanation of this trick:
+         * http://stackoverflow.com/questions/924285/efficiency-of-java-double-brace-initialization
+         *
+         * Add an agent to the list so it gets invoked.
+         */
+        agents = new ArrayList<Agent>()
+        {{
+            add(new BollingerBandAgent(walletInUSDollars));
+        }};
     }
 
-    public StockValue getNextValue()
-    {
-        StockValue toReturn = null;
+    public void executeTrades() {
+        Iterator<Stock> stockValueIterator = stocks.iterator();
 
-        if (stockNdx < stocks.size())
-        {
-            toReturn = stocks.get(stockNdx);
-            stockNdx++;
+        while (stockValueIterator.hasNext()) {
+            Stock currentStock = stockValueIterator.next();
+
+            for (int i = 0; i < agents.size(); i++)
+                agents.get(i).trade(currentStock);
         }
+    }
 
-        return toReturn;
+    public void printResults() {
+        for (int i = 0; i < agents.size(); i++)
+            agents.get(i).printResults();
     }
 }
