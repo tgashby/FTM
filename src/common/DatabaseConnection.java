@@ -34,44 +34,33 @@ public class DatabaseConnection {
         jdbcURL = jdbcURLBuilder.toString();
     }
 
-    public void connect() {
-        try {
-            connection = DriverManager.getConnection(jdbcURL);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+    public void connect() throws SQLException {
+        connection = DriverManager.getConnection(jdbcURL);
     }
 
-    public StockValue getStock(String name, Date date, Time time) {
-        StockValue stockValue = null;
+    public Stock getStock(String name, Date date, Time time) throws SQLException {
+        Stock stock = null;
 
-        try
-        {
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("select * from " + stockTableName +
-                    " where " + StockColumnNames.NAME + "=" + name + " and " +
-                                StockColumnNames.DAY + "=" + date + " and " +
-                                StockColumnNames.TIME + "=" + time);
+        Statement statement = connection.createStatement();
+        ResultSet resultSet = statement.executeQuery("select * from " + stockTableName +
+                " where " + StockTableColumnNames.NAME + "=" + name + " and " +
+                            StockTableColumnNames.DAY + "=" + date + " and " +
+                            StockTableColumnNames.TIME + "=" + time);
 
-            if (resultSet.next()) {
-                stockValue = new StockValue(resultSet.getString(StockColumnNames.SYMBOL.toString()),
-                        resultSet.getString(StockColumnNames.NAME.toString()),
-                        resultSet.getDate(StockColumnNames.DAY.toString()),
-                        resultSet.getTime(StockColumnNames.TIME.toString()),
-                        resultSet.getDouble(StockColumnNames.VALUE.toString()));
-            }
-            statement.close();
+        if (resultSet.next()) {
+            stock = new Stock(resultSet.getString(StockTableColumnNames.SYMBOL.toString()),
+                    resultSet.getString(StockTableColumnNames.NAME.toString()),
+                    resultSet.getDate(StockTableColumnNames.DAY.toString()),
+                    resultSet.getTime(StockTableColumnNames.TIME.toString()),
+                    resultSet.getDouble(StockTableColumnNames.VALUE.toString()));
         }
-        catch (SQLException ex)
-        {
-            ex.printStackTrace();
-        }
+        statement.close();
 
-        return stockValue;
+        return stock;
     }
 
-    public StockValue[] getStockPrices(String[] names, Date dates[], Time times[]) {
-        StockValue[] stockBeans = new StockValue[names.length];
+    public Stock[] getStockPrices(String[] names, Date dates[], Time times[]) throws SQLException {
+        Stock[] stockBeans = new Stock[names.length];
 
         for (int i = 0; i < names.length; i++) {
             stockBeans[i] = getStock(names[i], dates[i], times[i]);
@@ -80,44 +69,52 @@ public class DatabaseConnection {
         return stockBeans;
     }
 
-    public ArrayList<StockValue> getAllStocks() {
-        ArrayList<StockValue> allStocks = new ArrayList<StockValue>(10000);
+    public ArrayList<Stock> getAllStocks() throws SQLException {
+        ArrayList<Stock> allStocks = new ArrayList<Stock>(10000);
 
-        try {
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("select * from " + stockTableName);
+        Statement statement = connection.createStatement();
+        ResultSet resultSet = statement.executeQuery("select * from " + stockTableName);
 
-            while(resultSet.next()) {
-                allStocks.add(new StockValue(resultSet.getString(StockColumnNames.SYMBOL.toString()),
-                        resultSet.getString(StockColumnNames.NAME.toString()),
-                        resultSet.getDate(StockColumnNames.DAY.toString()),
-                        resultSet.getTime(StockColumnNames.TIME.toString()),
-                        resultSet.getDouble(StockColumnNames.VALUE.toString())));
-            }
-
-            statement.close();
+        while(resultSet.next()) {
+            allStocks.add(new Stock(resultSet.getString(StockTableColumnNames.SYMBOL.toString()),
+                    resultSet.getString(StockTableColumnNames.NAME.toString()),
+                    resultSet.getDate(StockTableColumnNames.DAY.toString()),
+                    resultSet.getTime(StockTableColumnNames.TIME.toString()),
+                    resultSet.getDouble(StockTableColumnNames.VALUE.toString())));
         }
-        catch (SQLException ex)
-        {
-            ex.printStackTrace();
-        }
+
+        statement.close();
 
         return allStocks;
     }
 
-    public void insertStock(StockValue stockValue) {
-        try {
-            Statement statement = connection.createStatement();
-            statement.execute("insert into " + stockTableName + " values ( " +
-                    "'" + stockValue.getSymbol() + "'," +
-                    "'" + stockValue.getName() + "'," +
-                    "'" + stockValue.getDate() + "'," +
-                    "'" + stockValue.getTime() + "'," +
-                    stockValue.getValue() + ");");
+    public ArrayList<Stock> getStocksByDay(Date date) throws SQLException {
+        ArrayList<Stock> allStocksToday = new ArrayList<Stock>(50000);
+
+        Statement statement = connection.createStatement();
+        ResultSet resultSet = statement.executeQuery("select * from " + stockTableName +
+                " where " + StockTableColumnNames.DAY + "=" + " date('" + date + "')");
+
+        while (resultSet.next()) {
+            allStocksToday.add(new Stock(resultSet.getString(StockTableColumnNames.SYMBOL.toString()),
+                    resultSet.getString(StockTableColumnNames.NAME.toString()),
+                    resultSet.getDate(StockTableColumnNames.DAY.toString()),
+                    resultSet.getTime(StockTableColumnNames.TIME.toString()),
+                    resultSet.getDouble(StockTableColumnNames.VALUE.toString())));
         }
-        catch (SQLException ex) {
-            ex.printStackTrace();
-        }
+        statement.close();
+
+        return allStocksToday;
+    }
+
+    public void insertStock(Stock stock) throws SQLException {
+        Statement statement = connection.createStatement();
+        statement.execute("insert into " + stockTableName + " values ( " +
+                "'" + stock.getSymbol() + "'," +
+                "'" + stock.getName() + "'," +
+                "'" + stock.getDate() + "'," +
+                "'" + stock.getTime() + "'," +
+                stock.getValue() + ");");
     }
 
     public void disconnect() {
