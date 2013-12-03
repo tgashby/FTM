@@ -8,18 +8,16 @@ import org.apache.commons.math3.distribution.TDistribution;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.apache.commons.math3.stat.regression.SimpleRegression;
 
+import java.io.*;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
+import java.util.*;
 
 /**
  * User: allen
  * Date: 11/21/13
  * Time: 1:45 PM
  */
-//TODO: filter stocks
+//TODO: separate alpha levels. durbin-watson, anderson-darling, levene's test,
 public class AR1Agent extends MultipleStockTraderAgent {
     private int sampleSize;
     private double alphaLevel;
@@ -52,7 +50,7 @@ public class AR1Agent extends MultipleStockTraderAgent {
             currentRegression.addData(stock.getValue());
 
             if (currentStockValues.size() >= sampleSize && currentRegression.independenceMet(alphaLevel) &&
-                    currentRegression.linearityMet(alphaLevel) && currentRegression.normalityMet(alphaLevel) &&
+                    currentRegression.normalityMet(alphaLevel) && currentRegression.linearityMet(alphaLevel) &&
                     currentRegression.equalVariancesMet(alphaLevel)) {
 
                 currentRegression.regress();
@@ -79,6 +77,7 @@ public class AR1Agent extends MultipleStockTraderAgent {
         private int timeCounter_x = 0;
         private ArrayList<Double> residuals = new ArrayList<Double>(100);
         private SummaryStatistics xValues = new SummaryStatistics();
+        private DurbinWatsonSignificanceTable durbinWatsonSignificanceTable = new DurbinWatsonSignificanceTable();
 
         public void addData(final double y) {
             addData(timeCounter_x++, y);
@@ -98,17 +97,15 @@ public class AR1Agent extends MultipleStockTraderAgent {
             return durbinWatsonStatisticNumerator / super.getSumSquaredErrors();
         }
 
+        public double getPointPrediction(double x) {
+            return super.predict(x);
+        }
+
         public Tuple<Double, Double> getPredictionInterval(double x, double alphaLevel) {
-            double pointPrediction = super.predict(x);
+            double pointPrediction = getPointPrediction(x);
             double moe = 0;
 
-            try {
-                moe = getMarginOfError(x, alphaLevel);
-            } catch (NoSuchFieldException e) {
-                throw new RuntimeException(e);
-            } catch (IllegalAccessException e) {
-                throw new RuntimeException(e);
-            }
+            moe = getMarginOfError(x, alphaLevel);
 
             return new Tuple<Double, Double>(pointPrediction - moe, pointPrediction + moe);
         }
@@ -117,7 +114,7 @@ public class AR1Agent extends MultipleStockTraderAgent {
             return timeCounter_x;
         }
 
-        private double getMarginOfError(double x, double alphaLevel) throws NoSuchFieldException, IllegalAccessException {
+        private double getMarginOfError(double x, double alphaLevel) {
             double residualStandardDeviation = super.getSumSquaredErrors() / (super.getN() - 2);
             double standardizedSquareOfX = Math.pow(x - getXBar(), 2);
             double degreesOfFreedom = super.getN() - 1;
@@ -126,11 +123,23 @@ public class AR1Agent extends MultipleStockTraderAgent {
                     (degreesOfFreedom * getSquareSampleStandardDeviationOfX())));
         }
 
-        private double getXBar() throws IllegalAccessException, NoSuchFieldException {
-            Field xBarField = this.getClass().getSuperclass().getDeclaredField("xbar");
-            xBarField.setAccessible(true);
+        /**
+         * I have to catch the exceptions here since the trade() method is inherited and cannot throw exceptions
+         */
+        private double getXBar() {
+            double xbar;
 
-            return (Double) xBarField.get(this);
+            try {
+                Field xBarField = this.getClass().getSuperclass().getDeclaredField("xbar");
+                xBarField.setAccessible(true);
+                xbar = (Double) xBarField.get(this);
+            } catch (NoSuchFieldException e) {
+                throw new RuntimeException(e);
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
+
+            return xbar;
         }
 
         private double getTCriticalValue(double degreesOfFreedom, double alphaLevel) {
@@ -142,64 +151,86 @@ public class AR1Agent extends MultipleStockTraderAgent {
         }
 
         public boolean independenceMet(double alphaLevel) {
-            //look at lower & upper Durbin-Watson bounds. D < dL -> reject; D > dU -> fail to reject;   //df
-            double lowerBound = 0;
-            double upperBound = 0;
+            Tuple<Double, Double> bounds = durbinWatsonSignificanceTable.getBounds(residuals.size(), alphaLevel);
             double durbinWatsonTestStatistic = getDurbinWatsonStatistic();
 
-            if (durbinWatsonTestStatistic < lowerBound) {
-                //return false;
-            } else if (durbinWatsonTestStatistic > upperBound) {
-                //return true;
-            } else {
-                //test inconclusive
-                //return false;
-            }
-
-            return false;
+            if (durbinWatsonTestStatistic < bounds.x)
+                return true;
+            else if (durbinWatsonTestStatistic > bounds.y)
+                return false;
+            else
+                return false;
         }
 
         //true if null hypothesis rejected, false if cannot reject null hypothesis
         public boolean linearityMet(double alphaLevel) {
-            return false;
+            //TODO: lack of fit test. needs data to be blocked
+            return true;
         }
 
         public boolean normalityMet(double alphaLevel) {
             A_DTest andersonDarlingTest = new A_DTest(new NumericSequence(residuals));
 
             andersonDarlingTest.adjustNormal();
-            return andersonDarlingTest.getPValue() < alphaLevel;
+            //return andersonDarlingTest.getPValue() > alphaLevel;
+            return true;
         }
 
         public boolean equalVariancesMet(double alphaLevel) {
-            return false;
+            //TODO: levene's test or Bartlett's test
+            return true;
         }
     }
 
     private class DurbinWatsonSignificanceTable {
-        //gets bounds at 0.05% significance. Assumes number of explanatory variables is 1 (k).
-        public Tuple<Double, Double> getBounds(int n) {
-            //sort by the absolute value of subtraction (this - n)
+        private ArrayList<Tuple<Integer, Tuple<Double, Double>>> significanceValues01
+                = new ArrayList<Tuple<Integer, Tuple<Double, Double>>>(210);
+        private ArrayList<Tuple<Integer, Tuple<Double, Double>>> significanceValues025
+                = new ArrayList<Tuple<Integer, Tuple<Double, Double>>>(210);
+        private ArrayList<Tuple<Integer, Tuple<Double, Double>>> significanceValues05
+                = new ArrayList<Tuple<Integer, Tuple<Double, Double>>>(210);
 
-            //TODO: initialize from txt file
-            ArrayList<Tuple<Integer, Tuple<Double, Double>>> significanceValuesFor5PercentAlpha
-                    = new ArrayList<Tuple<Integer, Tuple<Double, Double>>>()
-            {{
-                    add(new Tuple<Integer, Tuple<Double, Double>>(30, new Tuple<Double, Double>(1.352, 1.489)));
-                    add(new Tuple<Integer, Tuple<Double, Double>>(31, new Tuple<Double, Double>(1.363, 1.496)));
-                    add(new Tuple<Integer, Tuple<Double, Double>>(32, new Tuple<Double, Double>(1.373, 1.502)));
-                    add(new Tuple<Integer, Tuple<Double, Double>>(33, new Tuple<Double, Double>(1.383, 1.508)));
-                    add(new Tuple<Integer, Tuple<Double, Double>>(34, new Tuple<Double, Double>(1.993, 1.514)));
-                    add(new Tuple<Integer, Tuple<Double, Double>>(35, new Tuple<Double, Double>(1.402, 1.519)));
-                    add(new Tuple<Integer, Tuple<Double, Double>>(36, new Tuple<Double, Double>(1.411, 1.525)));
-                    add(new Tuple<Integer, Tuple<Double, Double>>(37, new Tuple<Double, Double>(1.419, 1.530)));
-                    add(new Tuple<Integer, Tuple<Double, Double>>(38, new Tuple<Double, Double>(1.427, 1.535)));
-                    add(new Tuple<Integer, Tuple<Double, Double>>(39, new Tuple<Double, Double>(1.435, 1.540)));
-            }};
+        public DurbinWatsonSignificanceTable() {
+            String onePercentDurbinWatsonValues = "/resources/durbin_watson_01.txt";
+            String twoAndAHalfPercentDurbinWatsonValues = "/resources/durbin_watson_025.txt";
+            String fivePercentDurbinWatsonValues = "/resources/durbin_watson_05.txt";
 
-            Collections.sort(significanceValuesFor5PercentAlpha, new SignificanceTableComparator(n));
+            initializeList(onePercentDurbinWatsonValues, significanceValues01);
+            initializeList(twoAndAHalfPercentDurbinWatsonValues, significanceValues025);
+            initializeList(fivePercentDurbinWatsonValues, significanceValues05);
+        }
 
-            return significanceValuesFor5PercentAlpha.get(0).y;
+        //user shouldn't specify alpha level above 0.05.
+        public Tuple<Double, Double> getBounds(int n, double alpha) {
+            ArrayList<Tuple<Integer, Tuple<Double, Double>>> currentSignificanceValues;
+
+            if (alpha < 0.01)
+                currentSignificanceValues = significanceValues01;
+            else if (alpha < 0.025)
+                currentSignificanceValues = significanceValues025;
+            else
+                currentSignificanceValues = significanceValues05;
+
+            Collections.sort(currentSignificanceValues, new SignificanceTableComparator(n));
+            return currentSignificanceValues.get(0).y;
+        }
+
+        private void initializeList(String filePath, ArrayList<Tuple<Integer, Tuple<Double, Double>>> significanceValues) {
+            Scanner scanner = new Scanner(getClass().getResourceAsStream(filePath));
+
+            //skip over header. 3 or more use a for.
+            for (int i = 0; i < 3; i++)
+                scanner.nextLine();
+
+            while (scanner.hasNext()) {
+                int currentN = Integer.parseInt(scanner.next().replace(".", ""));
+                scanner.next();
+                double lowerBound = scanner.nextDouble();
+                double upperBound = scanner.nextDouble();
+                scanner.nextLine();
+                significanceValues.add(new Tuple<Integer, Tuple<Double, Double>>(currentN,
+                        new Tuple<Double, Double>(lowerBound, upperBound)));
+            }
         }
     }
 
@@ -212,7 +243,8 @@ public class AR1Agent extends MultipleStockTraderAgent {
 
         @Override
         public int compare(Tuple<Integer, Tuple<Double, Double>> tuple1, Tuple<Integer, Tuple<Double, Double>> tuple2) {
-            return Math.abs(tuple1.x - n) -  Math.abs(tuple2.x - n);
+            //sort by the absolute value of subtraction from n
+            return Math.abs(tuple1.x - n) - Math.abs(tuple2.x - n);
         }
     }
 }
