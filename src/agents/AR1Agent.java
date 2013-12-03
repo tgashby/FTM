@@ -1,9 +1,9 @@
 package agents;
 
 import common.Stock;
+import common.Tuple;
 import org.apache.commons.math3.distribution.TDistribution;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
-import org.apache.commons.math3.stat.regression.RegressionResults;
 import org.apache.commons.math3.stat.regression.SimpleRegression;
 
 import java.lang.reflect.Field;
@@ -33,6 +33,7 @@ public class AR1Agent extends MultipleStockTraderAgent {
         }
     }
 
+    //TODO: clean up this code
     @Override
     public void trade(Stock stock) {
         if (stockSymbolsToTrade.contains(stock.getSymbol())) {
@@ -46,22 +47,20 @@ public class AR1Agent extends MultipleStockTraderAgent {
 
             currentRegression.addData(stock.getValue());
 
-            if (currentStockValues.size() >= sampleSize) {
-                try {
-                    fixIndependenceAssumption(currentRegression);
-                }
-                catch (UnconclusiveTestException e) {
-                    System.out.println("Test unconclusive at stock # " + currentStockValues.size() + " for " + stock.getName());
-                    return;
-                }
+            if (currentStockValues.size() >= sampleSize && currentRegression.testForIndependence(alphaLevel) &&
+                    currentRegression.testForLinearity(alphaLevel) && currentRegression.testForNormality(alphaLevel) &&
+                    currentRegression.testForEqualVariances(alphaLevel)) {
 
-                if (currentRegression.testForLinearity(alphaLevel) &&
-                        currentRegression.testForNormality(alphaLevel) &&
-                        currentRegression.testForEqualVariances(alphaLevel)) {
-                    RegressionResults results = currentRegression.regress();
-                    currentRegression.getSignificance();
-                    //if time is a significant predictor, then construct a PI for the next time period ahead.
-                    //if PI bounds are both above or below current stock price, then execute trade
+                currentRegression.regress();
+
+                if (currentRegression.getSignificance() < alphaLevel) {
+                    Tuple<Double, Double> tuple = currentRegression.
+                            getPredictionInterval(currentRegression.getTimeCounter_x() + 1, alphaLevel);
+                    if (stock.getValue() < tuple.x) {
+                        super.buy(stock);
+                    } else if (stock.getValue() > tuple.y) {
+                        super.sell(stock);
+                    }
                 }
             }
         }
@@ -70,32 +69,6 @@ public class AR1Agent extends MultipleStockTraderAgent {
     @Override
     public String getAgentName() {
         return "First Order Autoregressive Model Agent";
-    }
-
-    private void fixIndependenceAssumption(EnhancedSimpleRegression currentRegression) throws UnconclusiveTestException {
-        double durbinWatsonTestStatistic = currentRegression.getDurbinWatsonStatistic();
-        boolean rejectNullHypothesis = testForAutocorrelation(durbinWatsonTestStatistic);
-        //if we fail to reject, good to forecast
-        if (rejectNullHypothesis) {
-            //fix autocorrelation (estimate ro or assume ro is 1) and check for under or over autocorrelation
-            //if still autocorrelated, move on
-        }
-
-    }
-
-    private boolean testForAutocorrelation(double durbinWatsonTestStatistic) throws UnconclusiveTestException {
-        //look at lower & upper Durbin-Watson bounds. D < dL -> reject; D > dU -> fail to reject;   //df
-        double lowerBound = 0;
-        double upperBound = 0;
-
-        if (durbinWatsonTestStatistic < lowerBound)
-            return true;
-        else if (durbinWatsonTestStatistic > upperBound) {
-            return false;
-        }
-        else {
-            throw new UnconclusiveTestException();
-        }
     }
 
     private class EnhancedSimpleRegression extends SimpleRegression {
@@ -121,10 +94,23 @@ public class AR1Agent extends MultipleStockTraderAgent {
             return durbinWatsonStatisticNumerator / super.getSumSquaredErrors();
         }
 
-        public double[][] getPredictionInterval(double x, double alphaLevel) throws NoSuchFieldException, IllegalAccessException {
+        public Tuple<Double, Double> getPredictionInterval(double x, double alphaLevel) {
             double pointPrediction = super.predict(x);
-            double moe = getMarginOfError(x, alphaLevel);
-            return new double[][] { { pointPrediction - moe }, { pointPrediction + moe } };
+            double moe = 0;
+
+            try {
+                moe = getMarginOfError(x, alphaLevel);
+            } catch (NoSuchFieldException e) {
+                throw new RuntimeException(e);
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
+
+            return new Tuple<Double, Double>(pointPrediction - moe, pointPrediction + moe);
+        }
+
+        public int getTimeCounter_x() {
+            return timeCounter_x;
         }
 
         private double getMarginOfError(double x, double alphaLevel) throws NoSuchFieldException, IllegalAccessException {
@@ -151,6 +137,24 @@ public class AR1Agent extends MultipleStockTraderAgent {
             return xValues.getStandardDeviation();
         }
 
+        public boolean testForIndependence(double alphaLevel) {
+            //look at lower & upper Durbin-Watson bounds. D < dL -> reject; D > dU -> fail to reject;   //df
+            double lowerBound = 0;
+            double upperBound = 0;
+            double durbinWatsonTestStatistic = getDurbinWatsonStatistic();
+
+            if (durbinWatsonTestStatistic < lowerBound) {
+                //return true;
+            } else if (durbinWatsonTestStatistic > upperBound) {
+                //return false;
+            } else {
+                //test inconclusive
+                //return false;
+            }
+
+            return false;
+        }
+
         //true if null hypothesis rejected, false if cannot reject null hypothesis
         public boolean testForLinearity(double alphaLevel) {
             return false;
@@ -163,7 +167,9 @@ public class AR1Agent extends MultipleStockTraderAgent {
         public boolean testForEqualVariances(double alphaLevel) {
             return false;
         }
-    }
 
-    private class UnconclusiveTestException extends Exception {}
+        public void firstDifferencesMethodToFixAutocorrelation() {
+            //TODO: implement
+        }
+    }
 }
