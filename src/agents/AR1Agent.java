@@ -2,12 +2,16 @@ package agents;
 
 import common.Stock;
 import common.Tuple;
+import javanpst.data.structures.sequence.NumericSequence;
+import javanpst.tests.goodness.A_DTest.A_DTest;
 import org.apache.commons.math3.distribution.TDistribution;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.apache.commons.math3.stat.regression.SimpleRegression;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 
 /**
@@ -47,9 +51,9 @@ public class AR1Agent extends MultipleStockTraderAgent {
 
             currentRegression.addData(stock.getValue());
 
-            if (currentStockValues.size() >= sampleSize && currentRegression.testForIndependence(alphaLevel) &&
-                    currentRegression.testForLinearity(alphaLevel) && currentRegression.testForNormality(alphaLevel) &&
-                    currentRegression.testForEqualVariances(alphaLevel)) {
+            if (currentStockValues.size() >= sampleSize && currentRegression.independenceMet(alphaLevel) &&
+                    currentRegression.linearityMet(alphaLevel) && currentRegression.normalityMet(alphaLevel) &&
+                    currentRegression.equalVariancesMet(alphaLevel)) {
 
                 currentRegression.regress();
 
@@ -137,16 +141,16 @@ public class AR1Agent extends MultipleStockTraderAgent {
             return xValues.getStandardDeviation();
         }
 
-        public boolean testForIndependence(double alphaLevel) {
+        public boolean independenceMet(double alphaLevel) {
             //look at lower & upper Durbin-Watson bounds. D < dL -> reject; D > dU -> fail to reject;   //df
             double lowerBound = 0;
             double upperBound = 0;
             double durbinWatsonTestStatistic = getDurbinWatsonStatistic();
 
             if (durbinWatsonTestStatistic < lowerBound) {
-                //return true;
-            } else if (durbinWatsonTestStatistic > upperBound) {
                 //return false;
+            } else if (durbinWatsonTestStatistic > upperBound) {
+                //return true;
             } else {
                 //test inconclusive
                 //return false;
@@ -156,20 +160,59 @@ public class AR1Agent extends MultipleStockTraderAgent {
         }
 
         //true if null hypothesis rejected, false if cannot reject null hypothesis
-        public boolean testForLinearity(double alphaLevel) {
+        public boolean linearityMet(double alphaLevel) {
             return false;
         }
 
-        public boolean testForNormality(double alphaLevel) {
-            return false;
+        public boolean normalityMet(double alphaLevel) {
+            A_DTest andersonDarlingTest = new A_DTest(new NumericSequence(residuals));
+
+            andersonDarlingTest.adjustNormal();
+            return andersonDarlingTest.getPValue() < alphaLevel;
         }
 
-        public boolean testForEqualVariances(double alphaLevel) {
+        public boolean equalVariancesMet(double alphaLevel) {
             return false;
         }
+    }
 
-        public void firstDifferencesMethodToFixAutocorrelation() {
-            //TODO: implement
+    private class DurbinWatsonSignificanceTable {
+        //gets bounds at 0.05% significance. Assumes number of explanatory variables is 1 (k).
+        public Tuple<Double, Double> getBounds(int n) {
+            //sort by the absolute value of subtraction (this - n)
+
+            //TODO: initialize from txt file
+            ArrayList<Tuple<Integer, Tuple<Double, Double>>> significanceValuesFor5PercentAlpha
+                    = new ArrayList<Tuple<Integer, Tuple<Double, Double>>>()
+            {{
+                    add(new Tuple<Integer, Tuple<Double, Double>>(30, new Tuple<Double, Double>(1.352, 1.489)));
+                    add(new Tuple<Integer, Tuple<Double, Double>>(31, new Tuple<Double, Double>(1.363, 1.496)));
+                    add(new Tuple<Integer, Tuple<Double, Double>>(32, new Tuple<Double, Double>(1.373, 1.502)));
+                    add(new Tuple<Integer, Tuple<Double, Double>>(33, new Tuple<Double, Double>(1.383, 1.508)));
+                    add(new Tuple<Integer, Tuple<Double, Double>>(34, new Tuple<Double, Double>(1.993, 1.514)));
+                    add(new Tuple<Integer, Tuple<Double, Double>>(35, new Tuple<Double, Double>(1.402, 1.519)));
+                    add(new Tuple<Integer, Tuple<Double, Double>>(36, new Tuple<Double, Double>(1.411, 1.525)));
+                    add(new Tuple<Integer, Tuple<Double, Double>>(37, new Tuple<Double, Double>(1.419, 1.530)));
+                    add(new Tuple<Integer, Tuple<Double, Double>>(38, new Tuple<Double, Double>(1.427, 1.535)));
+                    add(new Tuple<Integer, Tuple<Double, Double>>(39, new Tuple<Double, Double>(1.435, 1.540)));
+            }};
+
+            Collections.sort(significanceValuesFor5PercentAlpha, new SignificanceTableComparator(n));
+
+            return significanceValuesFor5PercentAlpha.get(0).y;
+        }
+    }
+
+    private class SignificanceTableComparator implements Comparator<Tuple<Integer, Tuple<Double, Double>>> {
+        private int n;
+
+        public SignificanceTableComparator(int n) {
+            this.n = n;
+        }
+
+        @Override
+        public int compare(Tuple<Integer, Tuple<Double, Double>> tuple1, Tuple<Integer, Tuple<Double, Double>> tuple2) {
+            return Math.abs(tuple1.x - n) -  Math.abs(tuple2.x - n);
         }
     }
 }
