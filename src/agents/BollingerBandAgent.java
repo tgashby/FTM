@@ -62,7 +62,6 @@ public class BollingerBandAgent extends MultipleStockTraderAgent {
         double standardDeviation = basicStatistics.get(stock.getSymbol()).getStandardDeviation();
         double lowerBound = mean - standardDeviation * bandWidth;
         double upperBound = mean + standardDeviation * bandWidth;
-        int currentNumberOfShares = numberOfShares.get(stock.getSymbol());
 
         //undervalued
         if (stock.getValue() < lowerBound) {
