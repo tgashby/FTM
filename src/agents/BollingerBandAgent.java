@@ -67,18 +67,12 @@ public class BollingerBandAgent extends MultipleStockTraderAgent {
         //undervalued
         if (stock.getValue() < lowerBound) {
             //buy
-            if (wallet - stock.getValue() > 0) {
-                wallet -= stock.getValue();
-                numberOfShares.put(stock.getSymbol(), currentNumberOfShares + 1);
-            }
+            super.buy(stock);
         }
         //overvalued
         else if (stock.getValue() > upperBound) {
             //sell
-            if (currentNumberOfShares > 0) {
-                numberOfShares.put(stock.getSymbol(), currentNumberOfShares - 1);
-                wallet += stock.getValue();
-            }
+            super.sell(stock);
         }
     }
 

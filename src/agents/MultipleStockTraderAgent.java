@@ -1,5 +1,7 @@
 package agents;
 
+import common.Stock;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -17,16 +19,16 @@ public abstract class MultipleStockTraderAgent extends Agent {
         super(initialCapital);
 
         stockSymbolsToTrade = new ArrayList<String>() {{
-            add("TWTR");
-            add("VZ");
-            add("KR");
-            add("BKW");
             add("GOOG");
-            add("MSFT");
             add("OLN");
-            add("BA");
-            add("MSI");
+            add("KR");
+            add("RTN");
             add("TDC");
+            add("MSI");
+            add("VZ");
+            add("BA");
+            add("BKW");
+            add("MSFT");
         }};
 
         numberOfShares = new HashMap<String, Integer>(stockSymbolsToTrade.size());
@@ -34,6 +36,22 @@ public abstract class MultipleStockTraderAgent extends Agent {
 
         for (int i = 0; i < stockSymbolsToTrade.size(); i++)
             numberOfShares.put(stockSymbolsToTrade.get(i), 0);
+    }
+
+    //TODO: buy as a function of wallet size
+    protected void buy(Stock stock) {
+        if (wallet - stock.getValue() > 0) {
+            wallet -= stock.getValue();
+            numberOfShares.put(stock.getSymbol(), numberOfShares.get(stock.getSymbol()) + 1);
+        }
+    }
+
+    //TODO: sell as function of number of shares
+    protected void sell(Stock stock) {
+        if (numberOfShares.get(stock.getSymbol()) > 0) {
+            numberOfShares.put(stock.getSymbol(), numberOfShares.get(stock.getSymbol()) - 1);
+            wallet += stock.getValue();
+        }
     }
 
     @Override
