@@ -1,6 +1,6 @@
 Durbin-Watson 5% Critical Values
-T=30 to 1000, K=2, including intercept
-  T    K     dL       dU
+N=30 to 1000, K=2, including intercept
+  N    K     dL       dU
  30.   2.  1.35204  1.48936
  31.   2.  1.36298  1.49574
  32.   2.  1.37340  1.50190

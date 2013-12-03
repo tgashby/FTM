@@ -1,6 +1,6 @@
 Durbin-Watson 1% Critical Values
-T=30 to 1000, K=2, including intercept
-  T    K     dL       dU
+N=30 to 1000, K=2, including intercept
+  N    K     dL       dU
  30.   2.  1.13321  1.26342
  31.   2.  1.14672  1.27279
  32.   2.  1.15965  1.28184
