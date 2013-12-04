@@ -1,8 +1,10 @@
 package common;
 
+import agents.AR1Agent;
 import agents.BollingerBandAgent;
 import agents.Agent;
 
+import java.sql.Date;
 import java.sql.SQLException;
 import java.util.*;
 
@@ -33,7 +35,8 @@ public class Market {
          */
         agents = new ArrayList<Agent>()
         {{
-            add(new BollingerBandAgent(walletInUSDollars));
+                add(new BollingerBandAgent(walletInUSDollars));
+                add(new AR1Agent(walletInUSDollars));
         }};
     }
 
@@ -46,8 +49,10 @@ public class Market {
     }
 
     public void printResults() {
-        for (Agent agent : agents)
+        for (Agent agent : agents) {
             agent.printResults();
+            System.out.println();
+        }
 
         Stack<Agent> results = new Stack<Agent>();
         results.addAll(agents);
@@ -60,8 +65,7 @@ public class Market {
         });
 
         System.out.println("Agent Ranking:");
-        for (int i = 1; i < results.size() + 1; i++) {
+        for (int i = 1; i < results.size() + 1; i++)
             System.out.println(i + ". " + results.get(i - 1).getAgentName());
-        }
     }
 }
