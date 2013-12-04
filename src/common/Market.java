@@ -60,7 +60,7 @@ public class Market {
         Collections.sort(results, new Comparator<Agent>() {
             @Override
             public int compare(Agent agent, Agent agent2) {
-                return new Double(agent.getNetWorth()).compareTo(agent2.getNetWorth());
+                return new Double(agent2.getNetWorth()).compareTo(agent.getNetWorth());
             }
         });
 
