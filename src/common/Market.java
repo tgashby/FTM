@@ -6,8 +6,7 @@ import agents.Agent;
 
 import java.sql.Date;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.*;
 
 /**
  * User: Tag
@@ -42,20 +41,31 @@ public class Market {
     }
 
     public void executeTrades() {
-        Iterator<Stock> stockValueIterator = stocks.iterator();
 
-        while (stockValueIterator.hasNext()) {
-            Stock currentStock = stockValueIterator.next();
-
-            for (int i = 0; i < agents.size(); i++)
-                agents.get(i).trade(currentStock);
+        for (Stock currentStock : stocks) {
+            for (Agent agent : agents)
+                agent.trade(currentStock);
         }
     }
 
     public void printResults() {
-        for (int i = 0; i < agents.size(); i++) {
-            agents.get(i).printResults();
+        for (Agent agent : agents) {
+            agent.printResults();
             System.out.println();
         }
+
+        Stack<Agent> results = new Stack<Agent>();
+        results.addAll(agents);
+
+        Collections.sort(results, new Comparator<Agent>() {
+            @Override
+            public int compare(Agent agent, Agent agent2) {
+                return new Double(agent.getNetWorth()).compareTo(agent2.getNetWorth());
+            }
+        });
+
+        System.out.println("Agent Ranking:");
+        for (int i = 1; i < results.size() + 1; i++)
+            System.out.println(i + ". " + results.get(i - 1).getAgentName());
     }
 }

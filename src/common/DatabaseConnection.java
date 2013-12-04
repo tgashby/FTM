@@ -119,9 +119,21 @@ public class DatabaseConnection {
 
     public void disconnect() {
         try {
-            connection.close();
+            if (!connection.isClosed())
+            {
+                connection.close();
+            }
         } catch (SQLException e) {
+            System.out.println("Error while disconnecting:");
             e.printStackTrace();
         }
+    }
+
+    @Override
+    protected void finalize() throws Throwable
+    {
+        this.disconnect();
+
+        super.finalize();
     }
 }
