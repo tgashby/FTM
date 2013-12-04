@@ -1,7 +1,6 @@
 package agents;
 
 import common.Market;
-import common.StockValue;
 
 /**
  * User: Tag
@@ -9,7 +8,7 @@ import common.StockValue;
  * Time: 7:00 AM
  */
 public class TrendAgent {
-    public static void main(String[] args) {
+    /*
         Market market = new Market();
         StockValue stock;
         double wallet = 50000.00;
@@ -50,24 +49,5 @@ public class TrendAgent {
                 }
             }
         }
-
-        System.out.println();
-        System.out.printf("Final wallet is $%.2f\n", wallet);
-
-        double totalShares = 0;
-        for(int i =0;i<numStocks;i++){
-            totalShares += numShares[i];
-        }
-        System.out.println("Portfolio has " + totalShares + " shares.");
-
-        double sum=0;
-        for(int i =0;i<numStocks;i++){
-            sum+=(numShares[i]*curValue[i]);
-        }
-
-        System.out.println("Portfolio is worth $" + sum);
-        System.out.println();
-        double netWorth = wallet + sum;
-        System.out.printf("Net worth is $%.2f\n", netWorth);
-    }
+   */
 }
