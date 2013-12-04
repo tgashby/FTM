@@ -1,8 +1,10 @@
 package common;
 
-import agents.Agent;
+import agents.AR1Agent;
 import agents.BollingerBandAgent;
+import agents.Agent;
 
+import java.sql.Date;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -34,7 +36,8 @@ public class Market {
          */
         agents = new ArrayList<Agent>()
         {{
-            add(new BollingerBandAgent(walletInUSDollars));
+                add(new BollingerBandAgent(walletInUSDollars));
+                add(new AR1Agent(walletInUSDollars));
         }};
     }
 
@@ -50,7 +53,9 @@ public class Market {
     }
 
     public void printResults() {
-        for (int i = 0; i < agents.size(); i++)
+        for (int i = 0; i < agents.size(); i++) {
             agents.get(i).printResults();
+            System.out.println();
+        }
     }
 }
