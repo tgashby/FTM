@@ -1,6 +1,7 @@
 package common;
 
 import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
@@ -12,7 +13,7 @@ import org.testng.annotations.Test;
 public class EnhancedSimpleRegressionTest {
     private EnhancedSimpleRegression enhancedSimpleRegression;
 
-    @BeforeTest
+    @BeforeMethod
     public void initializeObject() {
         enhancedSimpleRegression = new EnhancedSimpleRegression();
     }
@@ -20,11 +21,11 @@ public class EnhancedSimpleRegressionTest {
     @Test
     public void testGetDurbinWatsonStatistic() throws Exception {
         enhancedSimpleRegression.addData(1, 1);
-        enhancedSimpleRegression.addData(2, 0);
-        enhancedSimpleRegression.addData(3, 1);
-        enhancedSimpleRegression.addData(4, 0);
-        enhancedSimpleRegression.addData(5, 1);
-        Assert.assertEquals(enhancedSimpleRegression.getDurbinWatsonStatistic(), 5);
+        enhancedSimpleRegression.addData(2, 2);
+        enhancedSimpleRegression.addData(3, 4);
+        enhancedSimpleRegression.addData(4, 8);
+        enhancedSimpleRegression.addData(5, 16);
+        Assert.assertEquals(enhancedSimpleRegression.getDurbinWatsonStatistic().doubleValue(), 1.50208);
     }
 
     @Test
