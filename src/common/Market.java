@@ -35,9 +35,9 @@ public class Market {
         {{
                 add(new BollingerBandAgent(walletInUSDollars));
                 add(new AR1Agent(walletInUSDollars));
+                add(new TrendAgent(walletInUSDollars));
                 add(new DumbTrendAgent(walletInUSDollars));
                 add(new BuyLowSellHighAgent(walletInUSDollars));
-                add(new TrendAgent(walletInUSDollars));
                 add(new DiceRollAgent(walletInUSDollars));
         }};
     }
