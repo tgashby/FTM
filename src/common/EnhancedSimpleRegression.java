@@ -17,6 +17,7 @@ import java.util.Scanner;
  * Date: 12/3/13
  * Time: 3:33 PM
  */
+//TODO: fix for autocorrelation (first differences), test for normality, test for equal variances, test for linearity
 public class EnhancedSimpleRegression extends SimpleRegression {
     private int timeCounter_x = 1;
     private ArrayList<Double> residuals = new ArrayList<Double>(100);
