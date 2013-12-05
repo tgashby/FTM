@@ -1,8 +1,6 @@
 package common;
 
-import agents.AR1Agent;
-import agents.BollingerBandAgent;
-import agents.Agent;
+import agents.*;
 
 import java.sql.Date;
 import java.sql.SQLException;
@@ -23,8 +21,8 @@ public class Market {
         DatabaseConnection databaseConnection = new DatabaseConnection();
 
         databaseConnection.connect();
-        //stocks = databaseConnection.getStocksByDay(new Date(System.currentTimeMillis()));
-        stocks = databaseConnection.getAllStocks();
+        stocks = databaseConnection.getStocksByDay(new Date(System.currentTimeMillis()));
+        //stocks = databaseConnection.getAllStocks();
         databaseConnection.disconnect();
 
         /**
@@ -37,6 +35,10 @@ public class Market {
         {{
                 add(new BollingerBandAgent(walletInUSDollars));
                 add(new AR1Agent(walletInUSDollars));
+                add(new DumbTrendAgent(walletInUSDollars));
+                add(new BuyLowSellHighAgent(walletInUSDollars));
+                add(new TrendAgent(walletInUSDollars));
+                add(new DiceRollAgent(walletInUSDollars));
         }};
     }
 
