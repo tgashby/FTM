@@ -43,8 +43,14 @@ public class TrendAgent extends Agent{
             
             if (thisAverage > lastAverage) {
                buy();
+               buy();
+               buy();
+               buy();
+               buy();
             }
             else if (thisAverage < lastAverage) {
+               sell();
+               sell();
                sell();
             }
             
