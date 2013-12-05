@@ -34,8 +34,10 @@ public abstract class MultipleStockTraderAgent extends Agent {
         numberOfShares = new HashMap<String, Integer>(stockSymbolsToTrade.size());
         lastValues = new HashMap<String, Double>(stockSymbolsToTrade.size());
 
-        for (int i = 0; i < stockSymbolsToTrade.size(); i++)
+        for (int i = 0; i < stockSymbolsToTrade.size(); i++) {
             numberOfShares.put(stockSymbolsToTrade.get(i), 0);
+            lastValues.put(stockSymbolsToTrade.get(i), 0.0);
+        }
     }
 
     //TODO: buy as a function of wallet size
