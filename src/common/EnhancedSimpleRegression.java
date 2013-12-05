@@ -118,6 +118,8 @@ public class EnhancedSimpleRegression extends SimpleRegression {
         if (durbinWatsonTestStatistic.compareTo(bounds.x) < 0)
             return true;
         else if (durbinWatsonTestStatistic.compareTo(bounds.y) > 0) {
+            //need a separate regression model (object). Or have context object become first differneces model
+
             //take first differences of x and y
             //run two sided Durbin-Watson test - get bounds and new statistic
             //run regression without an intercept
