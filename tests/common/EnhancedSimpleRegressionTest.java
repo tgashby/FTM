@@ -1,6 +1,7 @@
 package common;
 
 import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
@@ -12,7 +13,7 @@ import org.testng.annotations.Test;
 public class EnhancedSimpleRegressionTest {
     private EnhancedSimpleRegression enhancedSimpleRegression;
 
-    @BeforeTest
+    @BeforeMethod
     public void initializeObject() {
         enhancedSimpleRegression = new EnhancedSimpleRegression();
     }
