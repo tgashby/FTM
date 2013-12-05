@@ -27,7 +27,7 @@ public class AR1Agent extends MultipleStockTraderAgent {
 
     public AR1Agent(double capital) {
         super(capital);
-        sampleSize = 30;
+        sampleSize = 40;
         alphaLevel = 0.10;
 
         for (int i = 0; i < stockSymbolsToTrade.size(); i++) {

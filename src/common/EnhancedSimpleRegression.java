@@ -7,6 +7,7 @@ import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.apache.commons.math3.stat.regression.SimpleRegression;
 
 import java.lang.reflect.Field;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -20,8 +21,9 @@ import java.util.Scanner;
 //TODO: fix for autocorrelation (first differences), test for normality, test for equal variances, test for linearity
 public class EnhancedSimpleRegression extends SimpleRegression {
     private int timeCounter_x = 1;
-    private ArrayList<Double> residuals = new ArrayList<Double>(100);
-    private SummaryStatistics xValues = new SummaryStatistics();
+    private ArrayList<BigDecimal> xValues = new ArrayList<BigDecimal>(100);
+    private ArrayList<BigDecimal> yValues = new ArrayList<BigDecimal>(100);
+    private SummaryStatistics xValuesStats = new SummaryStatistics();
     private DurbinWatsonSignificanceTable durbinWatsonSignificanceTable = new DurbinWatsonSignificanceTable();
 
     public void addData(final double y) {
@@ -31,15 +33,31 @@ public class EnhancedSimpleRegression extends SimpleRegression {
     @Override
     public void addData(final double x, final double y) {
         super.addData(x, y);
-        residuals.add(y - super.predict(x));
-        xValues.addValue(x);
+        xValues.add(new BigDecimal(x));
+        yValues.add(new BigDecimal(y));
+        xValuesStats.addValue(x);
     }
 
-    public double getDurbinWatsonStatistic() {
-        int durbinWatsonStatisticNumerator = 0;
-        for (int t = 2; t < residuals.size(); t++)
-            durbinWatsonStatisticNumerator += residuals.get(t) - residuals.get(t - 1);
-        return durbinWatsonStatisticNumerator / super.getSumSquaredErrors();
+    public BigDecimal getDurbinWatsonStatistic() {
+        return getDurbinWatsonStatistic(getResiduals(xValues, yValues));
+    }
+
+    public BigDecimal getDurbinWatsonStatistic(ArrayList<BigDecimal> residuals) {
+        BigDecimal durbinWatsonStatisticNumerator = new BigDecimal(0);
+        for (int t = 1; t < residuals.size(); t++) {
+            BigDecimal decimalToAdd = residuals.get(t).subtract(residuals.get(t - 1));
+            durbinWatsonStatisticNumerator = durbinWatsonStatisticNumerator.add(decimalToAdd.pow(2));
+        }
+        return durbinWatsonStatisticNumerator.divide(new BigDecimal(super.getSumSquaredErrors()), 5, BigDecimal.ROUND_HALF_UP);
+    }
+
+    private ArrayList<BigDecimal> getResiduals(ArrayList<BigDecimal> xValues, ArrayList<BigDecimal> yValues) {
+        ArrayList<BigDecimal> residuals = new ArrayList<BigDecimal>(xValues.size());
+
+        for (int i = 0; i < xValues.size(); i++)
+            residuals.add(yValues.get(i).subtract(new BigDecimal(super.predict(xValues.get(i).doubleValue())))
+                    .setScale(1, BigDecimal.ROUND_HALF_UP));
+        return residuals;
     }
 
     public double getPointPrediction(double x) {
@@ -48,9 +66,7 @@ public class EnhancedSimpleRegression extends SimpleRegression {
 
     public Tuple<Double, Double> getPredictionInterval(double x, double alphaLevel) {
         double pointPrediction = getPointPrediction(x);
-        double moe = 0;
-
-        moe = getMarginOfError(x, alphaLevel);
+        double moe = getMarginOfError(x, alphaLevel);
 
         return new Tuple<Double, Double>(pointPrediction - moe, pointPrediction + moe);
     }
@@ -92,19 +108,22 @@ public class EnhancedSimpleRegression extends SimpleRegression {
     }
 
     private double getSquareSampleStandardDeviationOfX() {
-        return xValues.getStandardDeviation();
+        return xValuesStats.getStandardDeviation();
     }
 
     public boolean independenceMet(double alphaLevel) {
-        Tuple<Double, Double> bounds = durbinWatsonSignificanceTable.getBounds(residuals.size(), alphaLevel);
-        double durbinWatsonTestStatistic = getDurbinWatsonStatistic();
+        Tuple<BigDecimal, BigDecimal> bounds = durbinWatsonSignificanceTable.getBounds(xValues.size(), alphaLevel);
+        BigDecimal durbinWatsonTestStatistic = getDurbinWatsonStatistic();
 
-        if (durbinWatsonTestStatistic < bounds.x)
+        if (durbinWatsonTestStatistic.compareTo(bounds.x) < 0)
             return true;
-        else if (durbinWatsonTestStatistic > bounds.y)
-            //fix for autocorrelation here
+        else if (durbinWatsonTestStatistic.compareTo(bounds.y) > 0) {
+            //take first differences of x and y
+            //run two sided Durbin-Watson test - get bounds and new statistic
+            //run regression without an intercept
+
             return false;
-        else
+        } else
             return false;
     }
 
@@ -115,6 +134,12 @@ public class EnhancedSimpleRegression extends SimpleRegression {
     }
 
     public boolean normalityMet(double alphaLevel) {
+        ArrayList<BigDecimal> residualsBD = getResiduals(xValues, yValues);
+        ArrayList<Double> residuals = new ArrayList<Double>(100);
+
+        for (BigDecimal bigDecimal : residualsBD)
+            residuals.add(bigDecimal.doubleValue());
+
         A_DTest andersonDarlingTest = new A_DTest(new NumericSequence(residuals));
 
         andersonDarlingTest.adjustNormal();
@@ -128,12 +153,12 @@ public class EnhancedSimpleRegression extends SimpleRegression {
     }
 
     private class DurbinWatsonSignificanceTable {
-        private ArrayList<Tuple<Integer, Tuple<Double, Double>>> significanceValues01
-                = new ArrayList<Tuple<Integer, Tuple<Double, Double>>>(210);
-        private ArrayList<Tuple<Integer, Tuple<Double, Double>>> significanceValues025
-                = new ArrayList<Tuple<Integer, Tuple<Double, Double>>>(210);
-        private ArrayList<Tuple<Integer, Tuple<Double, Double>>> significanceValues05
-                = new ArrayList<Tuple<Integer, Tuple<Double, Double>>>(210);
+        private ArrayList<Tuple<Integer, Tuple<BigDecimal, BigDecimal>>> significanceValues01
+                = new ArrayList<Tuple<Integer, Tuple<BigDecimal, BigDecimal>>>(210);
+        private ArrayList<Tuple<Integer, Tuple<BigDecimal, BigDecimal>>> significanceValues025
+                = new ArrayList<Tuple<Integer, Tuple<BigDecimal, BigDecimal>>>(210);
+        private ArrayList<Tuple<Integer, Tuple<BigDecimal, BigDecimal>>> significanceValues05
+                = new ArrayList<Tuple<Integer, Tuple<BigDecimal, BigDecimal>>>(210);
 
         public DurbinWatsonSignificanceTable() {
             String onePercentDurbinWatsonValues = "/resources/durbin_watson_01.txt";
@@ -146,8 +171,8 @@ public class EnhancedSimpleRegression extends SimpleRegression {
         }
 
         //user shouldn't specify alpha level above 0.05.
-        public Tuple<Double, Double> getBounds(int n, double alpha) {
-            ArrayList<Tuple<Integer, Tuple<Double, Double>>> currentSignificanceValues;
+        public Tuple<BigDecimal, BigDecimal> getBounds(int n, double alpha) {
+            ArrayList<Tuple<Integer, Tuple<BigDecimal, BigDecimal>>> currentSignificanceValues;
 
             if (alpha < 0.01)
                 currentSignificanceValues = significanceValues01;
@@ -160,7 +185,7 @@ public class EnhancedSimpleRegression extends SimpleRegression {
             return currentSignificanceValues.get(0).y;
         }
 
-        private void initializeList(String filePath, ArrayList<Tuple<Integer, Tuple<Double, Double>>> significanceValues) {
+        private void initializeList(String filePath, ArrayList<Tuple<Integer, Tuple<BigDecimal, BigDecimal>>> significanceValues) {
             Scanner scanner = new Scanner(getClass().getResourceAsStream(filePath));
 
             //skip over header. 3 or more use a for.
@@ -170,16 +195,16 @@ public class EnhancedSimpleRegression extends SimpleRegression {
             while (scanner.hasNext()) {
                 int currentN = Integer.parseInt(scanner.next().replace(".", ""));
                 scanner.next();
-                double lowerBound = scanner.nextDouble();
-                double upperBound = scanner.nextDouble();
+                BigDecimal lowerBound = scanner.nextBigDecimal();
+                BigDecimal upperBound = scanner.nextBigDecimal();
                 scanner.nextLine();
-                significanceValues.add(new Tuple<Integer, Tuple<Double, Double>>(currentN,
-                        new Tuple<Double, Double>(lowerBound, upperBound)));
+                significanceValues.add(new Tuple<Integer, Tuple<BigDecimal, BigDecimal>>(currentN,
+                        new Tuple<BigDecimal, BigDecimal>(lowerBound, upperBound)));
             }
         }
     }
 
-    private class SignificanceTableComparator implements Comparator<Tuple<Integer, Tuple<Double, Double>>> {
+    private class SignificanceTableComparator implements Comparator<Tuple<Integer, Tuple<BigDecimal, BigDecimal>>> {
         private int n;
 
         public SignificanceTableComparator(int n) {
@@ -187,7 +212,7 @@ public class EnhancedSimpleRegression extends SimpleRegression {
         }
 
         @Override
-        public int compare(Tuple<Integer, Tuple<Double, Double>> tuple1, Tuple<Integer, Tuple<Double, Double>> tuple2) {
+        public int compare(Tuple<Integer, Tuple<BigDecimal, BigDecimal>> tuple1, Tuple<Integer, Tuple<BigDecimal, BigDecimal>> tuple2) {
             //sort by the absolute value of subtraction from n
             return Math.abs(tuple1.x - n) - Math.abs(tuple2.x - n);
         }
