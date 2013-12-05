@@ -21,7 +21,7 @@ public class Market {
         DatabaseConnection databaseConnection = new DatabaseConnection();
 
         databaseConnection.connect();
-        stocks = databaseConnection.getStocksByDay(new Date(System.currentTimeMillis() - millisecondsInADay));
+        stocks = databaseConnection.getStocksByDay(new Date(System.currentTimeMillis()));
         //stocks = databaseConnection.getAllStocks();
         databaseConnection.disconnect();
 
@@ -43,10 +43,12 @@ public class Market {
     }
 
     public void executeTrades() {
-
+        int i = 0;
         for (Stock currentStock : stocks) {
             for (Agent agent : agents)
                 agent.trade(currentStock);
+            if (i++ % 1000 == 0)
+                printResults();
         }
     }
 
