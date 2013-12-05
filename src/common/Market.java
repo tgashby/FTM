@@ -21,7 +21,7 @@ public class Market {
         DatabaseConnection databaseConnection = new DatabaseConnection();
 
         databaseConnection.connect();
-        stocks = databaseConnection.getStocksByDay(new Date(System.currentTimeMillis()));
+        stocks = databaseConnection.getStocksByDay(new Date(System.currentTimeMillis() - millisecondsInADay));
         //stocks = databaseConnection.getAllStocks();
         databaseConnection.disconnect();
 
