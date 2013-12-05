@@ -143,7 +143,8 @@ public class EnhancedSimpleRegression extends SimpleRegression {
         A_DTest andersonDarlingTest = new A_DTest(new NumericSequence(residuals));
 
         andersonDarlingTest.adjustNormal();
-        //return andersonDarlingTest.getPValue() > alphaLevel;
+        BigDecimal andersonDarlingPValue = new BigDecimal(andersonDarlingTest.getPValue());
+        //return andersonDarlingPValue.compareTo(new BigDecimal(alphaLevel)) > 0;
         return true;
     }
 
