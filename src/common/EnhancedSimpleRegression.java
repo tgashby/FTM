@@ -18,7 +18,7 @@ import java.util.Scanner;
  * Time: 3:33 PM
  */
 public class EnhancedSimpleRegression extends SimpleRegression {
-    private int timeCounter_x = 0;
+    private int timeCounter_x = 1;
     private ArrayList<Double> residuals = new ArrayList<Double>(100);
     private SummaryStatistics xValues = new SummaryStatistics();
     private DurbinWatsonSignificanceTable durbinWatsonSignificanceTable = new DurbinWatsonSignificanceTable();
@@ -101,6 +101,7 @@ public class EnhancedSimpleRegression extends SimpleRegression {
         if (durbinWatsonTestStatistic < bounds.x)
             return true;
         else if (durbinWatsonTestStatistic > bounds.y)
+            //fix for autocorrelation here
             return false;
         else
             return false;
