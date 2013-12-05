@@ -3,6 +3,7 @@ package common;
 import agents.AR1Agent;
 import agents.BollingerBandAgent;
 import agents.Agent;
+import agents.TrendAgent;
 
 import java.sql.Date;
 import java.sql.SQLException;
@@ -37,6 +38,7 @@ public class Market {
         {{
                 add(new BollingerBandAgent(walletInUSDollars));
                 add(new AR1Agent(walletInUSDollars));
+                add(new TrendAgent(walletInUSDollars));
         }};
     }
 

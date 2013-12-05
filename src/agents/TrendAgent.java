@@ -13,6 +13,7 @@ public class TrendAgent extends Agent{
    private double lastValue;
    private double lastAverage;
    private double thisAverage;
+   String stockName = null;
    
    public TrendAgent(double initialCapital){
       super(initialCapital);
@@ -20,30 +21,35 @@ public class TrendAgent extends Agent{
    }
    
    public void trade(Stock stock){
-      lastValue = stock.getValue();
-   
-      //if we dont have 50 values yet just add them to the list
-      if (values.size() < NUM_VALUES) {
-         values.add(lastValue);
-         //If we finally have 50 values lets make it the last average
-         if (values.size() == NUM_VALUES) {
-            lastAverage = getAverage();
-         }
+      if (stockName == null){
+         stockName = stock.getName();
       }
-      //Actually make some decisions and look at the trend
-      else {
-         values.removeLast();
-         values.addFirst(lastValue);
-         thisAverage = getAverage();
-         
-         if (thisAverage > lastAverage) {
-            buy();
+      if (stock.getName().equals(stockName)){
+         lastValue = stock.getValue();
+      
+         //if we dont have 50 values yet just add them to the list
+         if (values.size() < NUM_VALUES) {
+            values.add(lastValue);
+            //If we finally have 50 values lets make it the last average
+            if (values.size() == NUM_VALUES) {
+               lastAverage = getAverage();
+            }
          }
-         else if (thisAverage < lastAverage) {
-            sell();
+         //Actually make some decisions and look at the trend
+         else {
+            values.removeLast();
+            values.addFirst(lastValue);
+            thisAverage = getAverage();
+            
+            if (thisAverage > lastAverage) {
+               buy();
+            }
+            else if (thisAverage < lastAverage) {
+               sell();
+            }
+            
+            lastAverage = thisAverage;
          }
-         
-         lastAverage = thisAverage;
       }
    }
    
