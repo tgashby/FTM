@@ -24,7 +24,7 @@ public class TrendAgent extends Agent{
       if (stockName == null){
          stockName = stock.getSymbol();
       }
-      if (stock.getName().equals(stockName)){
+      if (stock.getSymbol().equals(stockName)){
          lastValue = stock.getValue();
       
          //if we dont have 50 values yet just add them to the list
