@@ -18,7 +18,7 @@ import java.util.*;
  * Date: 11/21/13
  * Time: 1:45 PM
  */
-//TODO: separate alpha levels. durbin-watson, anderson-darling, levene's test,
+//TODO: separate alpha levels. durbin-watson, anderson-darling, levene's test
 public class AR1Agent extends MultipleStockTraderAgent {
     private int sampleSize;
     private double alphaLevel;
@@ -60,9 +60,9 @@ public class AR1Agent extends MultipleStockTraderAgent {
                     Tuple<Double, Double> tuple = currentRegression.
                             getPredictionInterval(currentRegression.getTimeCounter_x() + 1, alphaLevel);
                     if (stock.getValue() < tuple.x) {
-                        super.buy(stock);
-                    } else if (stock.getValue() > tuple.y) {
                         super.sell(stock);
+                    } else if (stock.getValue() > tuple.y) {
+                        super.buy(stock);
                     }
                 }
             }
