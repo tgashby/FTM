@@ -22,7 +22,7 @@ public class TrendAgent extends Agent{
    
    public void trade(Stock stock){
       if (stockName == null){
-         stockName = stock.getName();
+         stockName = stock.getSymbol();
       }
       if (stock.getName().equals(stockName)){
          lastValue = stock.getValue();
@@ -60,6 +60,9 @@ public class TrendAgent extends Agent{
    }
    
    public String getAgentName(){
+      if (stockName != null){
+          return "Trend Agent Trading: " + stockName;
+      }
       return "Trend Agent";
    }
    
